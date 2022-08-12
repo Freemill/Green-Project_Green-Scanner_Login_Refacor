@@ -22,7 +22,7 @@ MVC pattern으로 구현하고 향후 확장성을 고려하여 Interface를 활
 
 
 
-<img src="C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220812214950618.png" alt="image-20220812214950618" style="zoom: 33%;" />
+![image](https://user-images.githubusercontent.com/76586084/184359227-9cf1eb57-0467-4df8-86e7-074b3c26f626.png)
 
 <img src="C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220812215030897.png" alt="image-20220812215030897" style="zoom: 50%;" />
 
@@ -30,7 +30,7 @@ MVC pattern으로 구현하고 향후 확장성을 고려하여 Interface를 활
 
 ##### 1.
 
-![](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220812215306621.png)
+![image](https://user-images.githubusercontent.com/76586084/184359262-701b5392-cb94-4b18-968e-0d3b6b0dd73b.png)
 
 > root 주소에서 @GetMapping을 활용해 Index page를 server 딴에서 전송하여 Thymeleaf 기능을 지원하게 하였다.
 
@@ -38,7 +38,7 @@ MVC pattern으로 구현하고 향후 확장성을 고려하여 Interface를 활
 
 ##### 2.
 
-![image-20220812215443902](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220812215443902.png)
+![image](https://user-images.githubusercontent.com/76586084/184359288-adac345b-7356-472d-83b0-06c7fd06d33f.png)
 
 > RESTFUL URI활용하고 th:field 기능을 활용하기 위해 Model 객체를 생성하고 넣어주었다.
 
