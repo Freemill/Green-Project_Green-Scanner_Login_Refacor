@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=0.25, maximum-scale=1.0, minimum-scale=0.20, user-scalable=yes">
+<meta name="google-signin-client_id" content="773803815081-0q0s92tkcbuu87s8njbn0mp1ao8c4loe.apps.googleusercontent.com">
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<title>로그인</title>
+<link rel="stylesheet" type="text/css" href="/css/map.css"/>
+</head>
+<body>
+	<!-- 공통 네비게이션: top -->
+	<nav>
+		<div class="nav-top">
+			<div class="wrapper">
+				<div class="nav-logo">
+					<a href="/">Green Scanner</a>
+				</div>
+				<div class="nav-menu">
+					<div class="login-nickname-container">
+						<span id="nickname">
+							<a id="login-btn" href="/html/login.html">로그인</a>
+							<a href="/html/memberInform.html"><div class="login-nickname"></div></a>
+						</span>
+					</div>
+					<div class="join-logout">
+						<a id="join-btn" th:href="@{/memberInsertForm}">회원가입</a>
+					</div>
+					<a>공지사항</a>
+					<div class="">
+						<a id="" href="/faq">FAQ</a>
+					</div>
+					<div class="nav-dropdown">
+						<button class="nav-dropdown-btn">자주사용하는기능</button>
+						<div class="dropdown-submenu">
+							<a href="/html/SWV.html">음성으로배출방법찾기</a>
+							<a onclick='alert("준비 중인 서비스입니다.")'>사진으로배출방법찾기</a>
+							<a href="/html/trashCanMap.html">주변쓰레기통찾기</a>
+							<a href="/html/zeroWasteShopMap.html">제로웨이스트상점찾기</a>
+							<a href="/challenge/main">챌린지</a>
+							<a href="/board/boardlist">게시판</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="nav-border"></div>
+	</nav>
+	<!-- content section -->
+	<div class="login-content">
+		<div class="login-wrapper">
+			<div class="login-logo">　</div>
+			<div class="form-div-login">
+				<form class="login-form">
+					<input type="text" id="login-form-email" name="email" placeholder="이메일@example.com" />
+					<input type="password" id="login-form-pw" name="pw" placeholder="비밀번호" />
+					<label id="login-form-checkbox">
+						<input type="checkbox" name="remember" value="rememberMe">  로그인 기록 저장
+					</label>	
+					<input type="button" class="login-form-btn" id="loginBtn" value="로그인" />					
+				</form>
+			</div>
+			<div class="form-div-btns">
+				<a href="/html/findPassword.html"><button id="find-pw-btn">비밀번호 찾기</button></a>
+				<a href="/html/memberInsertForm.html"><button id="login-join-btn">회원가입</button></a>
+			</div>
+			<div class="form-div-btns">
+				<div style="margin:10px,10px;" id="naver_id_login"></div>
+				<div style="height:65px; width:170px;" class="g-signin2" onClick="GoogleLogin()" data-onsuccess="onSignIn"></div>
+			</div>
+		</div>
+		<div class="login-space"></div>
+	</div>
+	
+	<!-- 공통 footer -->
+	<div class="footer">
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="footer-border"></div>
+		<!-- content section 크기와 같은 영역 -->
+		<div class="wrapper">
+			<div class="footer-left">
+				<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">개인정보처리방침</a>
+				<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">이용약관</a>
+			</div>
+			<div class="footer-right">
+				<span>Copyright @ GREEN SCANNER</span>
+			</div>
+		</div>
+	</div>
+	<script src="/js/naver.js"></script>
+	
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=0.25, maximum-scale=1.0, minimum-scale=0.20, user-scalable=yes">
+<title>회원가입</title>
+	<link rel="stylesheet" type="text/css" th:href="@{../css/map.css}"/>
+</head>
+<body>
+	<!-- 공통 네비게이션: top -->
+	<nav>
+		<div class="nav-top">
+			<div class="wrapper">
+				<div class="nav-logo">
+					<a href="/">Green Scanner</a>
+				</div>
+				<div class="nav-menu">
+					<div class="login-nickname-container">
+						<span id="nickname">
+							<a id="login-btn" href="/html/login.html">로그인</a>
+							<a href="/html/memberInform.html"><div class="login-nickname"></div></a>
+						</span>
+					</div>
+					<div class="join-logout">
+						<a id="join-btn" href="memberInsertForm.html">회원가입</a>
+					</div>
+					<a>공지사항</a>
+					<div class="">
+						<a id="" href="/faq">FAQ</a>
+					</div>
+					<div class="nav-dropdown">
+						<button class="nav-dropdown-btn">자주사용하는기능</button>
+						<div class="dropdown-submenu">
+							<a href="/html/SWV.html">음성으로배출방법찾기</a>
+							<a onclick='alert("준비 중인 서비스입니다.")'>사진으로배출방법찾기</a>
+							<a href="/html/trashCanMap.html">주변쓰레기통찾기</a>
+							<a href="/html/zeroWasteShopMap.html">제로웨이스트상점찾기</a>
+							<a href="/challenge/main">챌린지</a>
+							<a href="/board/boardlist">게시판</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="nav-border"></div>
+	</nav>
+
+	<div class="signup-content">
+		<div class="signup-wrapper">
+			<div class="signup-logo" style="margin-bottom:64px; margin-top:0px;">Green Scanner</div>
+			<div class="form-div-signup">
+				<form th:action="memberInsert" th:object="${member}"  class="signup-form" method="post">
+					<div>
+						<div style="margin-bottom:9px; margin-top:16px;" class="signup-name">이름</div>
+						<input th:field="*{name}" type="text" id="name"placeholder="이름을 입력해주세요." >
+
+						<div style="margin-bottom:9px; margin-top:16px;" class="signup-email">이메일</div>
+						<div class="form-div-btns">
+							<input th:field="*{userEmail}" type="text" id="email" placeholder="이메일을 입력해주세요." check_result="fail" required>
+							<button type="button" id="check-email-btn" style="margin-left: 14px;" value="N">중복확인</button>
+						</div>
+
+						<div style="margin-bottom:9px; margin-top:16px;" class="signup-nickname">닉네임</div>
+						<div class="form-div-btns">
+							<input th:field="*{nickName}" type="text" id="nickname" placeholder="닉네임을 입력해주세요." check_result="fail" required>
+							<button type="button"  id="check-nickname-btn" style="margin-left: 14px;" value="N">중복확인</button>
+						</div>
+
+						<div style="margin-bottom:9px; margin-top:16px;" class="signup-pw">비밀번호</div>
+						<input th:field="*{password}" type="password" id="password" placeholder="비밀번호를 입력해주세요." >
+
+						<div style="margin-bottom:9px; margin-top:16px;" class="signup-confirmpw">비밀번호 확인</div>
+						<input th:field="*{passwordConfirm}" type="password" id="passwordConfirm" placeholder="비밀번호를 입력해주세요.">
+
+						<div class="cont_division">
+							<ul class="agree_article depth2">
+								<li>
+									<div class="agree_desc">
+										<strong class="caution_txt left">(필수)</strong>
+										<strong class="anterior_txt">개인정보처리방침에 동의&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+										<label for="agree_rule1" class="check_custom check_off"><input th:field="*{privacyCheck}" type="checkbox" id="agree_rule1"></label>
+										<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ') " class="view_privacyPolicy" > 상세보기</a>
+
+									</div>
+
+								</li>
+
+								<li>
+									<div class="agree_desc">
+										<strong class="caution_txt left">(필수)</strong>
+										<strong class="anterior_txt">이용약관에 동의&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+										<label for="agree_rule2" class="check_custom check_off"><input th:field="*{termsCheck}" type="checkbox" id="agree_rule2"></label>
+										<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')" class="view_membershipTerms"> 상세보기</a>
+									</div>
+								</li>
+							</ul>
+						</div>
+
+						<div class="form-div-signbtns">
+							<button type= "button" id="cancle" onclick="location.href='/'">가입취소</button>
+							<button type="submit" id="login-join-btn-m" >회원가입</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- 공통 footer -->
+	<div class="footer">
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="footer-border"></div>
+		<!-- content section 크기와 같은 영역 -->
+		<div class="wrapper">
+			<div class="footer-left">
+				<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">개인정보처리방침</a>
+				<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">이용약관</a>
+			</div>
+			<div class="footer-right">
+				<span>Copyright @ GREEN SCANNER</span>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
