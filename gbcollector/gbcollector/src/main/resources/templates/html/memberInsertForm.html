@@ -6,6 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=0.25, maximum-scale=1.0, minimum-scale=0.20, user-scalable=yes">
 <title>회원가입</title>
 	<link rel="stylesheet" type="text/css" th:href="@{../css/map.css}"/>
+	<style>
+		.field-error{
+			border-color: #dc3545;
+			color: #dc3545;
+		}
+	</style>
 </head>
 <body>
 	<!-- 공통 네비게이션: top -->
@@ -17,7 +23,7 @@
 				</div>
 				<div class="nav-menu">
 					<div class="login-nickname-container">
-						<span id="nickname">
+						<span id="Nickname_div">
 							<a id="login-btn" href="/html/login.html">로그인</a>
 							<a href="/html/memberInform.html"><div class="login-nickname"></div></a>
 						</span>
@@ -53,36 +59,69 @@
 			<div class="form-div-signup">
 				<form th:action="memberInsert" th:object="${member}"  class="signup-form" method="post">
 					<div>
-						<div style="margin-bottom:9px; margin-top:16px;" class="signup-name">이름</div>
-						<input th:field="*{name}" type="text" id="name"placeholder="이름을 입력해주세요." >
+						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('name')} ? 'field-error' : _"
+							 class="signup-name">이름</div>
+						<input type="text" th:field="*{name}"
+							   th:classappend="${errors?.containsKey('name')} ? 'field-error' : _"
+							   placeholder="이름을 입력해주세요." >
+						<div class="field-error" th:if="${errors?.containsKey('name')}" th:text="${errors['name']}">
+							이름
+						</div>
 
-						<div style="margin-bottom:9px; margin-top:16px;" class="signup-email">이메일</div>
+						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('userEmail')} ? 'field-error' : _"
+							 class="signup-email">이메일</div>
 						<div class="form-div-btns">
-							<input th:field="*{userEmail}" type="text" id="email" placeholder="이메일을 입력해주세요." check_result="fail" required>
+							<input th:field="*{userEmail}" type="text" placeholder="abcdefg@Naver.com" check_result="fail">
 							<button type="button" id="check-email-btn" style="margin-left: 14px;" value="N">중복확인</button>
 						</div>
-
-						<div style="margin-bottom:9px; margin-top:16px;" class="signup-nickname">닉네임</div>
-						<div class="form-div-btns">
-							<input th:field="*{nickName}" type="text" id="nickname" placeholder="닉네임을 입력해주세요." check_result="fail" required>
-							<button type="button"  id="check-nickname-btn" style="margin-left: 14px;" value="N">중복확인</button>
+						<div class="field-error" th:if="${errors?.containsKey('userEmail')}" th:text="${errors['userEmail']}">
+							이메일
 						</div>
 
-						<div style="margin-bottom:9px; margin-top:16px;" class="signup-pw">비밀번호</div>
-						<input th:field="*{password}" type="password" id="password" placeholder="비밀번호를 입력해주세요." >
+						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('nickName')} ? 'field-error' : _"
+							 class="signup-nickname">닉네임</div>
+						<div class="form-div-btns">
+							<input th:field="*{nickName}" type="text" placeholder="닉네임을 입력해주세요." check_result="fail">
+							<button type="button"  id="check-nickname-btn" style="margin-left: 14px;" value="N">중복확인</button>
+						</div>
+						<div class="field-error" th:if="${errors?.containsKey('nickName')}" th:text="${errors['nickName']}">
+							닉네임
+						</div>
 
-						<div style="margin-bottom:9px; margin-top:16px;" class="signup-confirmpw">비밀번호 확인</div>
-						<input th:field="*{passwordConfirm}" type="password" id="passwordConfirm" placeholder="비밀번호를 입력해주세요.">
+						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('password')} ? 'field-error' : _"
+							 class="signup-pw">비밀번호</div>
+						<input th:field="*{password}" type="password" placeholder="비밀번호를 입력해주세요." >
+						<div class="field-error" th:if="${errors?.containsKey('password')}" th:text="${errors['password']}">
+							비밀번호
+						</div>
+
+						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('passwordConfirm')} ? 'field-error' : _"
+							 class="signup-confirmpw">비밀번호 확인</div>
+						<input th:field="*{passwordConfirm}" type="password"  placeholder="비밀번호를 입력해주세요.">
+						<div class="field-error" th:if="${errors?.containsKey('passwordConfirm')}" th:text="${errors['passwordConfirm']}">
+							비밀번호 확인
+						</div>
+
+						<div th:if="${errors?.containsKey('globalError')}">
+							<p class = "field-error" th:text="${errors['globalError']}">전체 오류 메시지</p>
+						</div>
 
 						<div class="cont_division">
 							<ul class="agree_article depth2">
 								<li>
 									<div class="agree_desc">
 										<strong class="caution_txt left">(필수)</strong>
-										<strong class="anterior_txt">개인정보처리방침에 동의&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+										<strong class="anterior_txt">개인정보처리방침 동의&nbsp;&nbsp;</strong>
+										<div th:if="${errors?.containsKey('privacyCheck')}" th:text="${errors['privacyCheck']}" th:class="field-error">
+											개인정보
+										</div>
 										<label for="agree_rule1" class="check_custom check_off"><input th:field="*{privacyCheck}" type="checkbox" id="agree_rule1"></label>
-										<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ') " class="view_privacyPolicy" > 상세보기</a>
-
+										<a href="#" th:onclick="window.open('@{\html\privacyPolicy.html}', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')" class="view_privacyPolicy" > 상세보기</a>
 									</div>
 
 								</li>
@@ -90,9 +129,12 @@
 								<li>
 									<div class="agree_desc">
 										<strong class="caution_txt left">(필수)</strong>
-										<strong class="anterior_txt">이용약관에 동의&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+										<strong class="anterior_txt">이용약관 동의&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+										<div th:if="${errors?.containsKey('termsCheck')}" th:text="${errors['termsCheck']}" th:class="field-error">
+											이용약관
+										</div>
 										<label for="agree_rule2" class="check_custom check_off"><input th:field="*{termsCheck}" type="checkbox" id="agree_rule2"></label>
-										<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')" class="view_membershipTerms"> 상세보기</a>
+										<a href="#" onclick="window.open('../static/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')" class="view_membershipTerms"> 상세보기</a>
 									</div>
 								</li>
 							</ul>
@@ -115,7 +157,7 @@
 		<div class="wrapper">
 			<div class="footer-left">
 				<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">개인정보처리방침</a>
-				<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">이용약관</a>
+				<a href="#" onclick="window.open('/html/memberInform.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">이용약관</a>
 			</div>
 			<div class="footer-right">
 				<span>Copyright @ GREEN SCANNER</span>

@@ -1,4 +1,4 @@
-package com.garb.gbcollector.login.domain.memberService;
+package com.garb.gbcollector.login.domain.memberservice;
 
 import com.garb.gbcollector.login.domain.memberdao.MemberRepository;
 import com.garb.gbcollector.login.domain.membervo.Member;
@@ -15,4 +15,10 @@ public class MemberServiceImpl implements MemberService{
     public void join(Member member) {
         memberRepository.save(member);
     }
+
+    @Override
+    public boolean nickNameDuplicateCheck(String nickName) {
+        return memberRepository.findByNickName(nickName);
+    }
+
 }

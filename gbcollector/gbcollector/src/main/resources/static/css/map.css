@@ -301,7 +301,7 @@ a, a:link, a:visited {
   	font-weight: 200;
 }
 
-#email{
+#userEmail{
 	width:276px;
 	height:52px;
 	border-radius: 8px;
@@ -312,7 +312,7 @@ a, a:link, a:visited {
 	font-weight: 200;
 }
 
-#nickname{
+#nickName{
 	width:276px;
 	height:52px;
 	border-radius: 8px;
@@ -336,6 +336,7 @@ a, a:link, a:visited {
 #password{
 	width: 378px;
 	height: 52px;
+	border-radius: 8px;
   	border: solid 1px #d6dddd;
   	font-family: GmarketSans;
   	font-size: 1rem;
@@ -358,14 +359,13 @@ a, a:link, a:visited {
 }
 
 .signup-form{
-
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;	
 }
 
 .signup-logo{
-	top:191px;
+	top:161px;
 	text-align: center;
 	width : 369px;
 	height : 41px;
