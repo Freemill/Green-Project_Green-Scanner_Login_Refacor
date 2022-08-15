@@ -7,7 +7,7 @@ public class Member {
 
     private Long id;
 
-    private String name;
+    private Integer number;
 
     private String userEmail;
 
@@ -23,8 +23,8 @@ public class Member {
 
     public Member(){}
 
-    public Member(String name, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
-        this.name = name;
+    public Member(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
+        this.number = number;
         this.userEmail = userEmail;
         this.nickName = nickName;
         this.password = password;

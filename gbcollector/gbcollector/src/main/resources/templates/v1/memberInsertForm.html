@@ -60,54 +60,56 @@
 				<form th:action="memberInsert" th:object="${member}"  class="signup-form" method="post">
 					<div>
 						<div style="margin-bottom:9px; margin-top:16px;"
+							 th:classappend="${errors?.containsKey('number')} ? 'field-error' : _"
 							 class="signup-name">숫자</div>
-						<input type="text" th:field="*{number}" th:errorclass="field-error"
-							   placeholder="숫자를 입력해주세요." >
-						<div class="field-error" th:errors="*{number}">
-							숫자
+						<input type="text" th:field="*{number}"
+							   th:classappend="${errors?.containsKey('number')} ? 'field-error' : _"
+							   placeholder="숫자을 입력해주세요." >
+						<div class="field-error" th:if="${errors?.containsKey('number')}" th:text="${errors['number']}">
+							이름
 						</div>
 
 						<div style="margin-bottom:9px; margin-top:16px;"
-
+							 th:classappend="${errors?.containsKey('userEmail')} ? 'field-error' : _"
 							 class="signup-email">이메일</div>
 						<div class="form-div-btns">
-							<input th:field="*{userEmail}" th:errroclass="field-error" type="text" placeholder="abcdefg@Naver.com" check_result="fail">
+							<input th:field="*{userEmail}" type="text" placeholder="abcdefg@Naver.com" check_result="fail">
 							<button type="button" id="check-email-btn" style="margin-left: 14px;" value="N">중복확인</button>
 						</div>
-						<div class="field-error" th:errors="*{userEmail}">
+						<div class="field-error" th:if="${errors?.containsKey('userEmail')}" th:text="${errors['userEmail']}">
 							이메일
 						</div>
 
 						<div style="margin-bottom:9px; margin-top:16px;"
-
+							 th:classappend="${errors?.containsKey('nickName')} ? 'field-error' : _"
 							 class="signup-nickname">닉네임</div>
 						<div class="form-div-btns">
-							<input th:field="*{nickName}" th:errorclass="field-error" type="text" placeholder="닉네임을 입력해주세요." check_result="fail">
+							<input th:field="*{nickName}" type="text" placeholder="닉네임을 입력해주세요." check_result="fail">
 							<button type="button"  id="check-nickname-btn" style="margin-left: 14px;" value="N">중복확인</button>
 						</div>
-						<div class="field-error" th:errors="*{nickName}">
+						<div class="field-error" th:if="${errors?.containsKey('nickName')}" th:text="${errors['nickName']}">
 							닉네임
 						</div>
 
 						<div style="margin-bottom:9px; margin-top:16px;"
-
+							 th:classappend="${errors?.containsKey('password')} ? 'field-error' : _"
 							 class="signup-pw">비밀번호</div>
-						<input th:field="*{password}" th:errorclass="field-error" type="password" placeholder="비밀번호를 입력해주세요." >
-						<div class="field-error" th:errors="*{password}">
+						<input th:field="*{password}" type="password" placeholder="비밀번호를 입력해주세요." >
+						<div class="field-error" th:if="${errors?.containsKey('password')}" th:text="${errors['password']}">
 							비밀번호
 						</div>
 
 						<div style="margin-bottom:9px; margin-top:16px;"
-
+							 th:classappend="${errors?.containsKey('passwordConfirm')} ? 'field-error' : _"
 							 class="signup-confirmpw">비밀번호 확인</div>
-						<input th:field="*{passwordConfirm}" th:errorclass="field-error" type="password"  placeholder="비밀번호를 입력해주세요.">
-						<div class="field-error" th:errors="*{passwordConfirm}">
+						<input th:field="*{passwordConfirm}" type="password"  placeholder="비밀번호를 입력해주세요.">
+						<div class="field-error" th:if="${errors?.containsKey('passwordConfirm')}" th:text="${errors['passwordConfirm']}">
 							비밀번호 확인
 						</div>
 
-							<div th:if="${#fields.hasGlobalErrors()}">
-								<p class = "field-error" th:each= "err : ${#fields.globalErrors()}" th:text="${err}">글로벌 오류 메시지</p>
-							</div>
+						<div th:if="${errors?.containsKey('globalError')}">
+							<p class = "field-error" th:text="${errors['globalError']}">전체 오류 메시지</p>
+						</div>
 
 						<div class="cont_division">
 							<ul class="agree_article depth2">
@@ -115,7 +117,7 @@
 									<div class="agree_desc">
 										<strong class="caution_txt left">(필수)</strong>
 										<strong class="anterior_txt">개인정보처리방침 동의&nbsp;&nbsp;</strong>
-										<div th:errors="*{privacyCheck}" th:errorclass="field-error">
+										<div th:if="${errors?.containsKey('privacyCheck')}" th:text="${errors['privacyCheck']}" th:class="field-error">
 											개인정보
 										</div>
 										<label for="agree_rule1" class="check_custom check_off"><input th:field="*{privacyCheck}" type="checkbox" id="agree_rule1"></label>
@@ -128,7 +130,7 @@
 									<div class="agree_desc">
 										<strong class="caution_txt left">(필수)</strong>
 										<strong class="anterior_txt">이용약관 동의&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
-										<div th:errors="*{termsCheck}"  th:errorclass="field-error">
+										<div th:if="${errors?.containsKey('termsCheck')}" th:text="${errors['termsCheck']}" th:class="field-error">
 											이용약관
 										</div>
 										<label for="agree_rule2" class="check_custom check_off"><input th:field="*{termsCheck}" type="checkbox" id="agree_rule2"></label>

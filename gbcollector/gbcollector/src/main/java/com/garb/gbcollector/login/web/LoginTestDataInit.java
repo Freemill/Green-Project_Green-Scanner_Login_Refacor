@@ -15,7 +15,7 @@ public class LoginTestDataInit {
 
     @PostConstruct
     public void init(){
-        memberRepository.save(new Member("홍길동", "gildong@naver.com", "gildong", "killdong", "killdong", true, true));
-        memberRepository.save(new Member("김철수", "chulsoo@naver.com", "chulsoo", "chulsuck", "chulsuck", true, true));
+        memberRepository.save(new Member(1, "gildong@naver.com", "gildong", "killdong", "killdong", true, true));
+        memberRepository.save(new Member(2, "chulsoo@naver.com", "chulsoo", "chulsuck", "chulsuck", true, true));
     }
 }

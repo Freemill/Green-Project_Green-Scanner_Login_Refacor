@@ -15,9 +15,9 @@ public class MemoryMemberRepositoryTest {
 
     @BeforeEach
     public void beforeEach() {
-        Member memberA = new Member("빌덴브로", "bill@naver.com", "동생", "asdf", "asdf", true, true);
-        Member memberB = new Member("조지덴브로", "jeorge@naver.com", "버버리빌", "asdf", "asdf", true, true);
-        Member memberC = new Member("벤한스컴", "benn@naver.com", "뚱땡이", "asdf", "asdf", true, true);
+        Member memberA = new Member(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
+        Member memberB = new Member(4, "jeorge@naver.com", "버버리빌", "asdf", "asdf", true, true);
+        Member memberC = new Member(5, "benn@naver.com", "뚱땡이", "asdf", "asdf", true, true);
         memoryMemberRepository.save(memberA);
         memoryMemberRepository.save(memberB);
         memoryMemberRepository.save(memberC);
@@ -27,7 +27,7 @@ public class MemoryMemberRepositoryTest {
     @DisplayName("findByNickName Test!")
     void findByNickName() {
         //given
-        Member memberTest = new Member("빌덴브로", "bill@naver.com", "동생", "asdf", "asdf", true, true);
+        Member memberTest = new Member(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
 
         //when
         boolean nickNameCheck1 = memoryMemberRepository.findByNickName("빌덴브로");

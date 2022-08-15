@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=0.25, maximum-scale=1.0, minimum-scale=0.20, user-scalable=yes">
+<title>제로 웨이스트 상점 위치 조회</title>
+<link rel="stylesheet" type="text/css" href="/css/map.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=sv7ubxvg8l"></script>
+<script src="/MarkerClustering.js"></script>
+<script src="/js/zeroWasteShopMap.js"></script>
+<script src="/js/login.js"></script>
+</head>
+<body>
+	<!-- 공통 네비게이션: top -->
+	<nav>
+		<div class="nav-top">
+			<div class="wrapper">
+				<div class="nav-logo">
+					<a href="/">Green Scanner</a>
+				</div>
+				<div class="nav-menu">
+					<div class="login-nickname-container">
+						<span id="nickname">
+							<a id="login-btn" href="/html/login.html">로그인</a>
+							<a href="/html/memberInform.html"><div class="login-nickname"></div></a>
+						</span>
+					</div>
+					<div class="join-logout">
+						<a id="join-btn" href="/html/memberInsertForm.html">회원가입</a>
+					</div>
+					<a>공지사항</a>
+					<div class="">
+						<a id="" href="/faq">FAQ</a>
+					</div>
+					<div class="nav-dropdown">
+						<button class="nav-dropdown-btn">자주사용하는기능</button>
+						<div class="dropdown-submenu">
+							<a href="/html/SWV.html">음성으로배출방법찾기</a>
+							<a onclick='alert("준비 중인 서비스입니다.")'>사진으로배출방법찾기</a>
+							<a href="/html/trashCanMap.html">주변쓰레기통찾기</a>
+							<a href="/html/zeroWasteShopMap.html">제로웨이스트상점찾기</a>
+							<a href="/challenge/main">챌린지</a>
+							<a href="/board/boardlist">게시판</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="nav-border"></div>
+	</nav>
+	<!-- content section -->
+	<div class="map-content">
+		<!-- 지도 위에 이름 영역 -->
+		<div class="map-title">
+			<div class="map-title-bold">제로웨이스트 상점 찾기</div>
+			<div class="map-title-regular">지도를 움직여 제로웨이스트 상점을 찾아보세요.</div>
+		</div>
+		<!-- 지도 표시 영역 -->
+		<div class="map-div">
+			<div class="map-shop" id="map"></div>
+			<!-- 상점 리스트 표시 영역 -->
+			<div class="map-shop-list">
+				<table class="shop-table" id="marker-list">
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<!-- 공통 footer -->
+	<div class="footer">
+		<!-- 밑줄: 디자인 요소 다운하여 사용 -->
+		<div class="footer-border"></div>
+		<!-- content section 크기와 같은 영역 -->
+		<div class="wrapper">
+			<div class="footer-left">
+				<a href="#" onclick="window.open('/html/privacyPolicy.html', '개인정보처리방침', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">개인정보처리방침</a>
+				<a href="#" onclick="window.open('/html/membershipTerms.html', '이용약관', 'resizable=no scrollbars=yes width=500 height=500 top=0, left=0 ')">이용약관</a>
+			</div>
+			<div class="footer-right">
+				<span>Copyright @ GREEN SCANNER</span>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -290,7 +290,7 @@ a, a:link, a:visited {
 }
 
 /*占쎌돳占쎌뜚揶쏉옙占쎌뿯*/
-#name{
+#number{
 	width:276px;
 	height:52px;
 	border-radius: 8px;
@@ -323,7 +323,7 @@ a, a:link, a:visited {
   	font-weight: 200;	
 }
 
-#name{
+#number{
 	width: 378px;
 	height: 52px;
 	border-radius: 8px;
