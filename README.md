@@ -10,6 +10,8 @@ Web 기술에 집중을 하기 위해 DB는 메모리로 사용한다. (향후 D
 
 처음 package는 내부에서 사용하는 logic을 위한 domain과 사용자에게 서비스를 제공할 때 필요한 web으로 나눈다.
 
+학습의 출처는 ***김영한 스프링 MVC 2편***으로 하고 실습 예제는 개인의 다른 템플릿으로 진행한다.
+
 
 
 ## Day 1
@@ -30,7 +32,7 @@ MVC pattern으로 구현하고 향후 확장성을 고려하여 Interface를 활
 
 
 ### memberInsertPage
-<img src="https://user-images.githubusercontent.com/76586084/184360117-c2b33092-5d49-4421-a360-d694f9cb9b39.png" alt="image" style="zoom: 23%;" />
+<img src="https://user-images.githubusercontent.com/76586084/184360117-c2b33092-5d49-4421-a360-d694f9cb9b39.png" alt="image"/>
 
 로그인 학습에 필요한 Page를 우선 구현한다. 기존 미흡하게 구현되었던 Thymeleaf 기능을 조금 Refactoring 하였다.
 
@@ -48,7 +50,7 @@ MVC pattern으로 구현하고 향후 확장성을 고려하여 Interface를 활
 
 > RESTFUL URI활용하고 th:field 기능을 활용하기 위해 Model 객체를 생성하고 넣어주었다.
 
-# 
+
 
 ## Day 2
 
@@ -98,7 +100,7 @@ findByNickName을 만든 후 이것을 MemberServiceImpl에서 활용했다.
 
 위 로직의 경우 저장소에 닉네임이 존재하지 않으면 False를 반환하는 method이다.
 
-이 로직의 경우 Test를 해보았다.
+이 로직의 경우 단위 Test를 해보았다.
 
 ![image](https://user-images.githubusercontent.com/76586084/184534787-50fe9414-6e49-48b3-be70-b92a7686697d.png)
 
@@ -199,15 +201,13 @@ Log가 의도한대로 들어오는것을 확인할 수 있었다.
 bindingResult.addError(new FieldError("member", "number", "번호 입력은 필수입니다."));
 ```
 
-코드를 보면 알 수 있겠지만 OjbectName을 바로 찾는것을 볼 수 있다. 이것은 Spring이 @ModelAddAttribute 뒤에 BindingResult를 넣어주면 BindingResult에 자동으로 앞의 @ModelAddAttribute에서 생성된 객체가 연결되기 때문에 사용할 수 있는것이다.
+코드를 보면 알 수 있겠지만 OjbectName을 바로 찾는것을 볼 수 있다. 이것은 Spring이 @ModelAttribute 뒤에 BindingResult를 넣어주면 BindingResult에 자동으로 앞의 @ModelAddAttribute에서 생성된 객체가 연결되기 때문에 사용할 수 있는것이다.
 
 
 
-이번엔 GlobalError를 Refactoring 해보겠다.
+이번엔 GlobalError를 Refactoring 해보겠다. 아래와 같인 new Object를 활용하면 된다.
 
 ![image](https://user-images.githubusercontent.com/76586084/184621757-a7f53c39-90c0-4efa-bf63-f2baeb72354e.png)
-
-아래와 같인 new Object를 활용하면 된다.
 
 
 
@@ -275,53 +275,172 @@ V2버전의 Global Error도 살펴보자.
 
 
 
+## Day 5
+
+---
+
+타입오류를 화면에 남기기 전에 현재 프로젝트는 오류가 발생할 시 기존의 입력 데이터를 화면에 전달하지 못하고 있다.
+
+![image](https://user-images.githubusercontent.com/76586084/184829774-6935a079-67b1-4c5b-8582-0a747403debf.png)
+
+![image](https://user-images.githubusercontent.com/76586084/184829673-17026bd2-0e21-4f34-8d9c-96bc5f274513.png)
+
+오류 메시지는 표시하지만 기존에 입력한 "asdf"는 날아가 버림. :cry:
+
+이 문제를 해결하는 방법은 간단하다.
 
 
 
+이 코드를
+
+![image](https://user-images.githubusercontent.com/76586084/184830151-98918440-2ec2-435b-b4b9-acf8c491d6dc.png)
+
+아래와 같이 수정해주면 된다.
+
+![image](https://user-images.githubusercontent.com/76586084/184831720-88f972ce-bbb8-4749-aa0d-eaaa993d1180.png)
 
 
 
+##### 파라미터 설명
+
+- ```objectName```  : 오류가 발생한 객체 이름
+- ```field``` : 오류 필드
+- ```rejectedValue``` : 사용자가 입력한 값(거절된 값)
+- ```bindingFailure``` : 타입 오류 같은 바인딩 실패인지, 검증 실패인지 구분 값
+- ```codes``` : 메시지 코드
+- ```arguments``` :  메시지에 사용하는 인자
+- ```defaultMessage``` : 기본 오류 메시지
+
+Object도 유사하게 주 가지 생성자를 제공한다.
+
+![image-20220816171943878](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816171943878.png)
 
 
 
+사용자의 입력 데이터가 컨트롤러의 ***```@ModelAttribute```***에 바인딩되는 시점에 오류가 발생하면 모델 객체에 사용자 입력 값을 유지하기 어렵다. 예를 들어서 숫자에 숫자가 아닌 문자가 입력된다면 가격은 ```Integer``` 타입으로 문자를 보관할 수 있는 방법이 없다. 그래서 오류가 발생한 경우 사용자가 입력 값을 보관하는 별도의 방법이 필요하다. 그리고 이렇게 보관한 사용자 입력 값을 검증 오류 발생시 화면에 다시 출력하면 된다.
+
+```FieldError```는 오류 발생시 사용자 입력 값을 저장하는 기능을 제공한다.
 
 
 
+이제부터 본격적으로 오류 코드와 메시지에 대하여 알아보자. :fire::fire: :fireworks:
+
+현재까지 
+
+![image](https://user-images.githubusercontent.com/76586084/184830151-98918440-2ec2-435b-b4b9-acf8c491d6dc.png)
+
+이런식으로 오류 메시지를 생성해 주었다. 하지만 이런 메시지도 한군데에서 모아놓고 관리해주면 상당히 관리하기에도 편하고 사용에도 편리할것 같다!
+
+이것을 할 수 있는 기능이 킹프링에는 존재한다! properties 파일을 활용하면된다.
+
+![image](https://user-images.githubusercontent.com/76586084/184831720-88f972ce-bbb8-4749-aa0d-eaaa993d1180.png)
+
+***```codes```***, ***```arguments```***를 활용하면 된다!  
 
 
 
+![image-20220816175216070](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816175216070.png)
+
+errors.properties를 만들어줌! 
+
+```applications.properties
+spring.messages.basename = errors
+```
+
+추가해줌!
+
+그리고
+
+![image-20220816185433243](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816185433243.png)
+
+이렇게 오류 메시지를 추가해 준다.
+
+또한 아래와 같이 오류메시지를 사용하게 Controller또한 Version upgrade를 한다.
+
+![image](https://user-images.githubusercontent.com/76586084/184851469-277425b8-8d70-4fc3-af0a-0ea5bf5a6e89.png)
+
+![image-20220816185527175](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816185527175.png)
+
+잘 작동하는 것을 확인할 수 있다.
+
+```java
+//codes에 아래와 같이 String[]{}같이 넣어주는 이유는 default를 이용하거나 오류메시지가 없을 때를 대비해 여러개의 오류메시지를 넣을 수 있기 때문이다.
+bindingResult.addError(new FieldError("member", "nickName", member.getNickName(), false, new String[]{"duplicated.member.nickName"}, null, null));
+```
 
 
 
+여기서 또 Version up을 해보자 .
+
+지금까지 ***```FieldError```***와 ***```ObjectError```***를 다루기 너무 번거로웠다.
+또한 오류코드도 조금 더 자동화 시킬 수 있을것 같다.
 
 
 
+컨트롤러에서 ***```BindingResult```***는 검증해야 할 객체인 ***```target```***바로 다음에 온다. 따라서  ***```BindingResult```***는 이미 본인이 검증해야 할 객체인 ***```target```***을 알고 있다.
 
 
 
+##### ***```rejectValue()```***, ***```reject()```*** 
+
+그리고 ***```BindingResult```***가 제공하는 ***```rejectValue()```***, ***```reject()```*** 를 사용하면 ***```FieldError```***, ***```ObjectError```***를 직접 생성하지 않고, 깔끔하게 검증 오류를 다룰 수 있다.
+
+***```rejectValue()```***, ***```reject()```*** 를 사용해서 기존 코드를 단순화 해보자. :shallow_pan_of_food:
+
+![image](https://user-images.githubusercontent.com/76586084/184856556-13467ccb-5476-4887-81d1-ca31bab5fa4f.png)
+
+![image](https://user-images.githubusercontent.com/76586084/184856523-c25c6f7c-391d-4e26-af9f-ce8f2afd732b.png)
+
+위에비해 굉장히 단순해 졌다.
+
+errorCode는 기존에 내가 입력한 것과 다르다 예를들어 나는 에러 코드에 required.member.number 이렇게 넣었는데 여기서는 required만 넣어도 작동을 하는 것을 볼 수 있다.
+
+이것은 축약된 errorCode인것을 알 수 있다. 이것을 ***messageCodeResolver*** 때문:exclamation:
+
+##### messageCodeResolver - :fire:
+
+test를 통해 알아보자
+
+![image](https://user-images.githubusercontent.com/76586084/184873742-66414607-6b14-451a-ae39-15ba3ca0aef7.png)
+
+![image](https://user-images.githubusercontent.com/76586084/184873799-18d92c7b-3219-41ab-8de4-f14885a34070.png)
+
+보면 알 수 있듯이 resolveMessageCodes를 사용하면 에러코드가 여러개 자동으로 생성된다. 
+
+***```BindingResult.rejectValue()```***를 사용하면 자동으로 저 codesResolver를 호출해 ***```New FieldError()```*** 여기에 저기 생성된 에러 코드들을 순서대로 넣어준다. 제일 Detail한 순서대로!!!
+required.member.number << required.number << required.java.lang.String << required
 
 
 
+##### ***```DefaultMessageCodesResolver```*** 의 기본 메시지 생성 규칙
 
+##### 객체오류
 
+```
+객체 오류의 경우 다음 순서로 2가지 생성
+1.: code + "." + object name
+2.: code
 
+예) 오류 코드 : required, object name : member
+1.: required.member
+2.: required
+```
 
+##### 필드오류
 
+```
+필드 오류의 경우 다음 순서로 4가지 메시지 코드 생성
+1.: code + "." + object name + "." + field
+2.: code + "." + field
+3.: code + "." + field type
+4.: code
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+예) 오류 코드 : typeMismatch, object name "user", field "age", field type : int
+1.: "typeMismatch.user.age"
+2.: "typeMismatch.age"
+3.: "typeMismatch.int"
+4.: "typeMismatch"
+```
 
 
 
