@@ -181,10 +181,10 @@ public class ValidationMemberControllerV2 {
         log.info("userEmail = {}", member.getUserEmail());
         //검증 로직
         if (member.getNumber() == null) {
-            bindingResult.rejectValue("number", "required",  new Object[]{0, 1000}, null);
+            bindingResult.rejectValue("number", "required");
         }
         if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
-            bindingResult.rejectValue("number", "range");
+            bindingResult.rejectValue("number", "range", new Object[]{0, 1000}, null);
         }
         if (!StringUtils.hasText(member.getNickName())) {
             bindingResult.rejectValue("nickName", "required");

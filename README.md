@@ -191,7 +191,39 @@ Log가 의도한대로 들어오는것을 확인할 수 있었다.
 
 기존 검증 FiledError 오류로직을 V2로 Refactoring해보았다.
 
-![image](https://user-images.githubusercontent.com/76586084/184621718-ca3e49fa-9570-41cb-915d-db5335902fc7.png)
+```java
+@PostMapping("/memberInsert")
+public String memberInsertV1(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    log.info("userEmail = {}", member.getUserEmail());
+    //검증 로직
+    if (member.getNumber() == null) {
+        bindingResult.addError(new FieldError("member", "number","번호 입력은 필수입니다."));
+    }
+    if (!StringUtils.hasText(member.getNickName())) {
+        bindingResult.addError(new FieldError("member", "nickName", "닉네임 입력은 필수입니다."));
+    }
+    if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+        bindingResult.addError(new FieldError("member", "nickName", "중복된 닉네임입니다."));
+    }
+    if (!StringUtils.hasText(member.getPassword())) {
+        bindingResult.addError(new FieldError("member", "password", "비밀번호 입력은 필수입니다."));
+    }
+    if (!StringUtils.hasText(member.getPasswordConfirm())) {
+        bindingResult.addError(new FieldError("member", "passwordConfirm", "비밀번호 확인 입력은 필수입니다."));
+    }
+    if (!StringUtils.hasText(member.getUserEmail())) {
+        bindingResult.addError(new FieldError("member", "userEmail", "이메일 입력은 필수입니다."));
+    }
+    if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+        bindingResult.addError(new FieldError("member", "userEmail", "이메일 형식에 맞춰 입력해주세요."));
+    }
+    if (!member.isPrivacyCheck()) {
+        bindingResult.addError(new FieldError("member", "privacyCheck", "개인정보처리방침 동의는 필수입니다."));
+    }
+    if (!member.isTermsCheck()) {
+        bindingResult.addError(new FieldError("member", "termsCheck", "이용약관 동의는 필수입니다."));
+    }
+```
 
 기존에는 errors를 HashMap으로 만들어 사용했지만 Spring(킹프링)에서 제공하는 BindingResult를 사용하면 그럴 필요가 없다.
 
@@ -351,13 +383,67 @@ spring.messages.basename = errors
 
 그리고
 
-![image-20220816185433243](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816185433243.png)
+```errors.properties
+required.member.number = 회원 숫자 입력은 필수입니다.
+range.member.number = 숫자는 {0} ~ {1}까지 입력 가능합니다.
+required.member.nickName = 회원 닉네임 입력은 필수입니다.
+duplicated.member.nickName = 중복된 닉네임 입니다.
+required.member.password = 비밀번호 입력은 필수입니다.
+required.member.passwordConfirm = 비밀번호 확인 입력은 필수입니다.
+required.member.userEmail = 이메일 입력은 필수입니다.
+formCheck.member.userEmail = 이메일 입력 형식에 맞춰주세요.
+passwordSame = 비밀번호와 비밀번호 확인이 일치하지 않습니다.
+```
 
 이렇게 오류 메시지를 추가해 준다.
 
 또한 아래와 같이 오류메시지를 사용하게 Controller또한 Version upgrade를 한다.
 
-![image](https://user-images.githubusercontent.com/76586084/184851469-277425b8-8d70-4fc3-af0a-0ea5bf5a6e89.png)
+```java
+@PostMapping("/memberInsert")
+public String memberInsertV3(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    log.info("userEmail = {}", member.getUserEmail());
+    //검증 로직
+    if (member.getNumber() == null) {
+        bindingResult.addError(new FieldError("member", "number", member.getNickName(), false, new String[]{"required.member.number"}, null, null));
+    }
+    if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
+        bindingResult.addError(new FieldError("member", "number", member.getNumber(), false, new String[]{"range.member.number"}, new Object[]{0, 1000}, null));
+    }
+    if (!StringUtils.hasText(member.getNickName())) {
+        bindingResult.addError(new FieldError("member", "nickName", member.getNickName(), false, new String[]{"required.member.nickName"}, null, null));
+    }
+    if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+        bindingResult.addError(new FieldError("member", "nickName", member.getNickName(), false, new String[]{"duplicated.member.nickName"}, null, null));
+    }
+    if (!StringUtils.hasText(member.getPassword())) {
+        bindingResult.addError(new FieldError("member", "password", member.getPassword(), false, new String[]{"required.member.password"}, null,  null));
+    }
+    if (!StringUtils.hasText(member.getPasswordConfirm())) {
+        bindingResult.addError(new FieldError("member", "passwordConfirm", member.getPasswordConfirm(), false, new String[]{"required.member.passwordConfirm"}, null, null));
+    }
+    if (!StringUtils.hasText(member.getUserEmail())) {
+        bindingResult.addError(new FieldError("member", "userEmail", member.getUserEmail(), false, new String[]{"required.member.userEmail"}, null, null));
+    }
+    if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+        bindingResult.addError(new FieldError("member", "userEmail", member.getUserEmail(), false, new String[]{"formCheck.member.userEmail"}, null, null));
+    }
+    if (!member.isPrivacyCheck()) {
+        bindingResult.addError(new FieldError("member", "privacyCheck", "개인정보처리방침 동의는 필수입니다."));
+    }
+    if (!member.isTermsCheck()) {
+        bindingResult.addError(new FieldError("member", "termsCheck", "이용약관 동의는 필수입니다."));
+    }
+    
+    // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+    if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+        String memberPassword = member.getPassword();
+        String memberPasswordConfirm = member.getPasswordConfirm();
+        if (memberPassword != memberPasswordConfirm) {
+            bindingResult.addError(new ObjectError("member", new String[]{"passwordSame"}, null, "비밀번호와 비밀번호확인의 입력값을 같은 값이어야 합니다."));
+            }
+        }
+```
 
 ![image-20220816185527175](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220816185527175.png)
 
@@ -387,9 +473,53 @@ bindingResult.addError(new FieldError("member", "nickName", member.getNickName()
 
 ***```rejectValue()```***, ***```reject()```*** 를 사용해서 기존 코드를 단순화 해보자. :shallow_pan_of_food:
 
-![image](https://user-images.githubusercontent.com/76586084/184856556-13467ccb-5476-4887-81d1-ca31bab5fa4f.png)
+```java
+@PostMapping("/memberInsert")
+    public String memberInsertV4(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+        log.info("userEmail = {}", member.getUserEmail());
+        //검증 로직
+        if (member.getNumber() == null) {
+            bindingResult.rejectValue("number", "required");
+        }
+        if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
+            bindingResult.rejectValue("number", "range", new Object[]{0, 1000}, null);
+        }
+        if (!StringUtils.hasText(member.getNickName())) {
+            bindingResult.rejectValue("nickName", "required");
+        }
+        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+            bindingResult.rejectValue("nickName", "duplicated");
+        }
+        if (!StringUtils.hasText(member.getPassword())) {
+            bindingResult.rejectValue("password", "required");
+        }
+        if (!StringUtils.hasText(member.getPasswordConfirm())) {
+            bindingResult.rejectValue("passwordConfirm", "required");
+        }
+        if (!StringUtils.hasText(member.getUserEmail())) {
+            bindingResult.rejectValue("userEmail", "required");
+        }
+        if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+            bindingResult.rejectValue("userEmail", "formCheck");
+        }
+        if (!member.isPrivacyCheck()) {
+            bindingResult.addError(new FieldError("member", "privacyCheck", "개인정보처리방침 동의는 필수입니다."));
+        }
+        if (!member.isTermsCheck()) {
+            bindingResult.addError(new FieldError("member", "termsCheck", "이용약관 동의는 필수입니다."));
+        }
+```
 
-![image](https://user-images.githubusercontent.com/76586084/184856523-c25c6f7c-391d-4e26-af9f-ce8f2afd732b.png)
+```java
+// password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+    String memberPassword = member.getPassword();
+    String memberPasswordConfirm = member.getPasswordConfirm();
+    if (memberPassword != memberPasswordConfirm) {
+        bindingResult.reject("passwordSame");
+    }
+}
+```
 
 위에비해 굉장히 단순해 졌다.
 
@@ -401,7 +531,33 @@ errorCode는 기존에 내가 입력한 것과 다르다 예를들어 나는 에
 
 test를 통해 알아보자
 
-![image](https://user-images.githubusercontent.com/76586084/184873742-66414607-6b14-451a-ae39-15ba3ca0aef7.png)
+```java
+public class MessageCodesResolverTest {
+
+    MessageCodesResolver codesResolver = new DefaultMessageCodesResolver();
+
+    @Test
+    @DisplayName("Obejct Error Test")
+    void messageCodesResolverObject(){
+        String[] messageCodes = codesResolver.resolveMessageCodes("required", "member");
+        for (String messageCode : messageCodes) {
+            System.out.println("messageCode = " + messageCode);
+        }
+        System.out.println("----------------------");
+        Assertions.assertThat(messageCodes).containsExactly("required.member", "required");
+    }
+
+    @Test
+    void messageCodesResolverField(){
+        String[] messageCodes = codesResolver.resolveMessageCodes("required", "member", "number" ,String.class);
+        for (String messageCode : messageCodes) {
+            System.out.println("messageCode = " + messageCode);
+        }
+
+    }
+
+}
+```
 
 ![image](https://user-images.githubusercontent.com/76586084/184873799-18d92c7b-3219-41ab-8de4-f14885a34070.png)
 
@@ -441,6 +597,213 @@ required.member.number << required.number << required.java.lang.String << requir
 3.: "typeMismatch.int"
 4.: "typeMismatch"
 ```
+
+
+
+
+
+## Day 6
+
+---
+
+##### 오류 코드 관리 전략
+
+***핵심은 구체적인 것에서! 덜 구체적인 것으로!***
+
+***```MessageCodesResolver```***는 ***```required.member.name```***처럼 구체적인 것을 먼저 만들어주고, ***```requied```***처럼 덜 구체적인 것을 나중에 만든다.
+
+
+
+***왜 이렇게 복잡하게 사용하는가?***
+
+모든 오류 코드에 대해서 메시지를 각각 다 정의하면 개발자 입장에서 관리하기 힘들다.
+크게 중요하지 않은 메시지는 범용성 있는 ***```requied```*** 같은 메시지로 끝내고, 정말 중요한 메시지는 꼭 필요할 때 구체적으로 적어서 사용하는 방식이 더 효과적이다.
+
+아래와 같이 만들어보자!:rotating_light:
+
+```
+#==FieldError==
+#Level1
+required.member.number = 회원 숫자 입력은 필수입니다.
+range.member.number = number는 {0} ~ {1}까지 입력 가능합니다.
+required.member.nickName = 회원 닉네임 입력은 필수입니다.
+duplicated.member.nickName = 중복된 닉네임 입니다.
+required.member.password = 비밀번호 입력은 필수입니다.
+required.member.passwordConfirm = 비밀번호 확인 입력은 필수입니다.
+required.member.userEmail = 이메일 입력은 필수입니다.
+formCheck.member.userEmail = 이메일 입력 형식에 맞춰주세요.
+
+
+#Level2 - 생략
+
+#Level3
+required.java.lang.String = 필수 문자입니다.
+required.java.lang.Integer = 필수 숫자입니다.
+range.java.lang.String = 문자는 {0} ~ {1}까지 입력 가능합니다.
+range.java.lang.Integer = 숫자는 {0} ~ {1}까지 입력 가능합니다.
+duplicated.java.lang.String = 중복된 문자입니다.
+formCheck.java.lang.String = 이메일 입력 형식에 맞춰주세요.
+
+
+#Level4
+required = 필수 값 입니다.
+range = {0} ~ {1}까지 범위를 허용합니다..
+formCheck = 틀린 형식 입니다.
+duplicated = 중복된 문자입니다.
+```
+
+Level1은 굉장히 Detail하게 갈수록 Rough하게
+
+
+
+:e-mail:참고
+
+```java
+if (!StringUtils.hasText(member.getName())){
+    bindingResult.rejectValue("name", "required");
+}
+
+// 위와 아래는 같은 기능을 한다.
+
+ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "name", "required")
+```
+
+
+
+
+
+이제 아기다리고기다리던! 타입 오류를 핸들링해보자!
+
+![image](https://user-images.githubusercontent.com/76586084/185107687-7c136350-8e3a-440f-9faf-f9154b60c7ab.png)
+
+현재는 이런 심란한 오류 메시지가 사용자에게 그대로 노출되고 있다. 보안에도 문제지만 야생의 사용자는 홈페이지 관리 상태를 의심할 것이다!
+
+
+
+검증 오류는 다음과 같이 2가지로 구분 할 수 있다.
+
+- 개발자가 직접 설정한 오류 코드 -> ***```rejectValue()```***를 직접 호출
+- 스프링이 직접 검증 오류에 추가한 경우(주로 타입 정보가 맞지 않음)
+
+
+
+
+
+지금까지 학습한 메시지 코드 전략의 강점을 지금부터 실감해보자 :fearful:
+
+![image](https://user-images.githubusercontent.com/76586084/185107687-7c136350-8e3a-440f-9faf-f9154b60c7ab.png)
+
+사실 이것만 보고도 알 수 있다. Integer 형임에도 String이 Controller 안으로 넘어 온 것이다! 또한 
+
+![image-20220817203353473](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220817203353473.png)
+
+이렇게  TypeMismatch라고 errorCode도 생성해 주었다! 이것은 스프링이 직접 해준것!  :+1:
+
+4가지 errorCode를 보면 다음과 같다.
+
+- ***```typeMistmatch.memer.number```***
+- ***```typeMistmatch.number```***
+- ***```typeMistmatch.java.lang.Integer```***
+- ***```typeMistmatch```***
+
+위에서 봤던것과 똑같은 형태!
+
+내가 저것을 ***errors.properties***에 입력 안해놓아서 defaultMessage가 나온것! 내가 직접 담으면!
+
+```errors.properties
+#추가 
+typeMismatch.java.lang.Integer = 숫자를 입력해주세요.
+typeMismatch = 타입 오류입니다.
+```
+
+이렇게 해주면!
+
+![image](https://user-images.githubusercontent.com/76586084/185109658-f20f64c3-eba2-4c7d-8efd-8fc774525d7f.png)
+
+짠!:golfing_man: 역시 Kingpring이다. 아주 잘 나오는 것을 확이할 수 있다.:golf:
+
+아래에 회원숫자 입력은 필수입니다.의 메시지는 type오류시 Model을 생성 못하고 그렇기 때문에 null로 들어오면서 생기는 메시지이다. 추가 조건을 넣어서 빼줄 수 있다.
+
+예를들면 아래의 코드를 첫줄에 넣어서 해결 가능
+
+```java
+if (bindingResult.hasErrors()){
+    log.info("errors = {}", bindingREsult);
+    return "validation/v2/addForm"
+}
+```
+
+과같이
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
