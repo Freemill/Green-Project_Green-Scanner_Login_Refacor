@@ -720,7 +720,7 @@ typeMismatch = 타입 오류입니다.
 
 ![image](https://user-images.githubusercontent.com/76586084/185109658-f20f64c3-eba2-4c7d-8efd-8fc774525d7f.png)
 
-짠!:golfing_man: 역시 Kingpring이다. 아주 잘 나오는 것을 확이할 수 있다.:golf:
+짠!:golfing_man: 역시 Kingpring이다. 아주 잘 나오는 것을 확인할 수 있다.:golf:
 
 아래에 회원숫자 입력은 필수입니다.의 메시지는 type오류시 Model을 생성 못하고 그렇기 때문에 null로 들어오면서 생기는 메시지이다. 추가 조건을 넣어서 빼줄 수 있다.
 
@@ -733,7 +733,314 @@ if (bindingResult.hasErrors()){
 }
 ```
 
-과같이
+
+
+
+
+## Day 7
+
+---
+
+```java
+@PostMapping("/memberInsert")
+public String memberInsertV4(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    log.info("userEmail = {}", member.getUserEmail());
+    //검증 로직
+    if (member.getNumber() == null) {
+        bindingResult.rejectValue("number", "required");
+    }
+    if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
+        bindingResult.rejectValue("number", "range", new Object[]{0, 1000}, null);
+    }
+    if (!StringUtils.hasText(member.getNickName())) {
+        bindingResult.rejectValue("nickName", "required");
+    }
+    if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+        bindingResult.rejectValue("nickName", "duplicated");
+    }
+    if (!StringUtils.hasText(member.getPassword())) {
+        bindingResult.rejectValue("password", "required");
+    }
+    if (!StringUtils.hasText(member.getPasswordConfirm())) {
+        bindingResult.rejectValue("passwordConfirm", "required");
+    }
+    if (!StringUtils.hasText(member.getUserEmail())) {
+        bindingResult.rejectValue("userEmail", "required");
+    }
+    if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+        bindingResult.rejectValue("userEmail", "formCheck");
+    }
+    if (!member.isPrivacyCheck()) {
+        bindingResult.addError(new FieldError("member", "privacyCheck", "개인정보처리방침 동의는 필수입니다."));
+    }
+    if (!member.isTermsCheck()) {
+        bindingResult.addError(new FieldError("member", "termsCheck", "이용약관 동의는 필수입니다."));
+    }
+
+    // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+    if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+        String memberPassword = member.getPassword();
+        String memberPasswordConfirm = member.getPasswordConfirm();
+        if (memberPassword != memberPasswordConfirm) {
+            bindingResult.reject("passwordSame");
+        }
+    }
+
+    //검증에 실패하면 다시 입력 폼으로!
+    if (bindingResult.hasErrors()) {
+        log.info("errors = {}", bindingResult);
+        return "html/memberInsertForm";
+    }
+
+    // 성공 로직
+    memberService.join(member);
+
+    return "redirect:/";
+}
+```
+
+전체 코드를 보면 느끼겠지만, 성공로직은 굉장히 짧은데 비해 검증 로직은 상당히 길다. 검증 로직을 별도로 모아 관리하는 Validator라는 class를 만들고 검증 코드를 따로 빼자! :whale: (코드가 훨씬 깔끔해지고 유지보수하기도 쉬워짐)
+
+![image](https://user-images.githubusercontent.com/76586084/185343258-2440f0b3-cfa3-4aaa-a8a5-f384f50d6d56.png)
+
+memberValidator class 생성
+
+memberValidator에 검증 로직들을 옮기고 기존 검증 로직을 삭제한다.
+
+```java
+package com.garb.gbcollector.login.web.validation;
+
+import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.Validator;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Component
+@RequiredArgsConstructor
+public class MemberValidator implements Validator {
+
+    private final MemberServiceImpl memberService;
+
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return Member.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public void validate(Object target, Errors errors) {
+        Member member = (Member) target;
+
+
+        //검증 로직
+        if (member.getNumber() == null) {
+            errors.rejectValue("number", "required");
+        }
+        if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
+            errors.rejectValue("number", "range", new Object[]{0, 1000}, null);
+        }
+        if (!StringUtils.hasText(member.getNickName())) {
+            errors.rejectValue("nickName", "required");
+        }
+        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+            errors.rejectValue("nickName", "duplicated");
+        }
+        if (!StringUtils.hasText(member.getPassword())) {
+            errors.rejectValue("password", "required");
+        }
+        if (!StringUtils.hasText(member.getPasswordConfirm())) {
+            errors.rejectValue("passwordConfirm", "required");
+        }
+        if (!StringUtils.hasText(member.getUserEmail())) {
+            errors.rejectValue("userEmail", "required");
+        }
+        if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+            errors.rejectValue("userEmail", "formCheck");
+        }
+        if (!member.isPrivacyCheck()) {
+            errors.rejectValue("privacyCheck", "required");
+        }
+        if (!member.isTermsCheck()) {
+            errors.rejectValue("termsCheck", "required");
+        }
+
+        // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+        if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+            String memberPassword = member.getPassword();
+            String memberPasswordConfirm = member.getPasswordConfirm();
+            if (memberPassword != memberPasswordConfirm) {
+                errors.reject("passwordSame");
+            }
+        }
+
+
+
+    }
+    private boolean emailTypeCheck(String userEmail) {
+        String regex = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(userEmail);
+        return !matcher.matches();
+    }
+}
+```
+
+##### @Component를 넣어줌
+
+
+
+그리고 기존의 코드와 아래와 같이 수정해준다.
+
+```java
+@Controller
+@RequiredArgsConstructor
+@Slf4j
+public class ValidationMemberControllerV2 {
+
+    private final MemberServiceImpl memberService;
+    private final MemberValidator memberValidator;
+
+    @GetMapping("/memberInsertForm")
+    public String memberInsert(Model model) {
+        log.info("memberInsertForm IN");
+        model.addAttribute("member", new Member());
+        return "html/memberInsertForm";
+    }
+
+    @PostMapping("/memberInsert")
+    public String memberInsertV5(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+
+        memberValidator.validate(member, bindingResult);
+
+        //검증에 실패하면 다시 입력 폼으로!
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+            return "html/memberInsertForm";
+        }
+
+        // 성공 로직
+        memberService.join(member);
+
+        return "redirect:/";
+    }
+```
+
+
+
+![image](https://user-images.githubusercontent.com/76586084/185340060-e1b7f1a1-5a9e-4bdf-ad7e-f109e5aa7e2a.png)
+
+잘 동작하는것을 확인할 수 있다.
+
+
+
+
+
+스프링이 ***```Validator```*** 인터페이스르르 별도로 제공하는 이뉴느 체계적으로 검증 기능을 도입하기 위해서다. 그런데 앞에서는 검증기를 직접 불러서 사용했고, 이렇게 사용해도 된다. 그런데 ***```Validator```*** 인터페이스를 사용해서 검증기를 만들면 스프링의 추가적인 도움을 받을 수 있다.
+
+
+
+##### WebDataBinder를 통해서 사용해보기
+
+***```WebDataBinder```***는 스프링의 파라미터 바인딩의 역할을 해주고 검증 기능도 내부에 포함된다.
+
+
+
+***ValidationItemControllerV2***에 다음 코드를 추가하자
+
+```java
+@InitBinder
+public void init(WebDataBinder dataBinder){
+    log.info("init binder {}", dataBinder);
+    dataBinder.addValidators(memberValidators);
+}
+```
+
+이렇게 해 놓으면 이제 컨트롤러에 들어올 때 마다 항상 위의 로직이 불려져서 항상 WebDataBinder가 새로 만들어지고 그게 저 로직에 들어오면서 항상 memberValidators의 검증기를 적용하게 됨
+
+그리고 ***memberInsertV6*** 아래와 같이 수정
+
+```java
+@PostMapping("/memberInsert")
+public String memberInsertV5(@Validated @ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+
+    //검증에 실패하면 다시 입력 폼으로!
+    if (bindingResult.hasErrors()) {
+        log.info("errors = {}", bindingResult);
+        return "html/memberInsertForm";
+    }
+
+    // 성공 로직
+    memberService.join(member);
+
+    return "redirect:/";
+}
+```
+
+이렇게 하면 이제***```@Validated```***가 붙어있는 것에서는 ***```@InitBinder```***가 동작한다.
+
+
+
+***동작 방식***
+
+***```@Validated```***는 검증기를 실행하라는 애노테이션이다.
+이 애노테이션이 붙으면 앞서 ***```WebDataBinder```***에 등록한 검증기를 찾아서 실행한다. 그런데 여러 검증기를 등록한다면 그 중에 어떤 검증기가 실행되어야 할지 구분이 필요하다. 이때 ***```supports()```***가 사용된다. 여기서 ***```supports(Member.class)```***가 호출되고, 결과가 ***true***이므로 ***```ItemValidator```***의 ***```validate()```*** 가 호출된다.
+
+
+
+##### 글로벌 설정 - 모든 컨틀롤러에 다 적용
+
+```java
+@SpringBootApplication
+public class GbcollectorApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(GbcollectorApplication.class, args);
+	}
+    
+    @Override
+    public Validator getValidator(){
+        return new MemberValidation();
+    }
+
+}
+```
+
+이렇게 넣으면 됨 이렇게 하면 기존 컨트롤러의 ***```@InitBinder```***를 제거해도 글로벌 설정으로 정상 동작하는 것을 확인할 수 있다.
+
+
+
+##### 참고
+
+> 검증시 ***```@Validated```*** , ***```@Valid```*** 둘 다 사용 가능하다.
+> ***```javax.validation.@Valid```***를 사용하려면 ***```build.gradle```*** 의존 관계가 추가가 필요
+> ***```implementation 'org.springframework.boot::spring-boot-starter-validation```***
+> ***```@Validated```*** 는 스프링 전용 검증 애노테이션이고, ***```@Valid```***는 자바 표준 검증 애노테이션이다.
+> 자세한 내용은 다음에!
+
+
+
+
+
+### Bean Validation - 소개
+
+검증 기능을 지금처럼 매번 코드로 작성하는 것은 상당히 번거롭다. 특히 특정 필드에 대한 검증 로직은 대부분 빈 값인지 아닌지, 특정 크기를 넘는지 아닌지와 같이 매우 일반적인 로직이다. 다음 코드를 보자.
+
+ex) ***```@NotBlank```*** , ***```@NotNull```***.  ***```Range(Min=, max=)```***
+
+이런 검증 로직을 모든 프로젝트에 적용하 수 있게 고통화하고, 표준화 한 것이 바로 ***Bean Validation***이다.
+***Bean Validation***을 잘 활용하면, 애노테이션 하나로 검증 로직을 매우 편리하게 적용할 수 있다.
+
+
+
+***```BeanValidation```***이란?
+
+먼저 Bean Validation은 특정한 구현체가 아니라 Bean Validation 2.0(JSR-380)이라는 기술 표준이다. 쉽게 이야기해서 검증 애노테이션과 여러 인터페이스의 모음이다. 마치 JPA가 표준 기술이고 그 구현체로 하이버네이트가 있는 것과 같다.
 
 
 
@@ -741,57 +1048,351 @@ if (bindingResult.hasErrors()){
 
 
 
+### Bean Validation - 시작
+
+***```Bean Validation``` 의존 관계 추가***
+
+```build.gradle
+implementation 'org.springframework.boot:spring-boot-starter-validation'
+```
+
+![image](https://user-images.githubusercontent.com/76586084/185367271-7cc071e1-3e61-4713-8446-ea10ca39499a.png)
+
+실제로 들어가 있다. 얘들은 인터페이스 실제 동작은 hibernate에서
+
+
+
+***```Member```***
+
+```java
+package com.garb.gbcollector.login.domain.membervo;
+
+import lombok.Data;
+import org.hibernate.validator.constraints.Range;
+
+import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Data
+public class Member {
+
+    private Long id;
+
+    @NotNull
+    @Range(min=1, max=1000)
+    private Integer number;
+
+    @Email
+    private String userEmail;
+
+    @NotBlank
+    private String nickName;
+
+    @NotBlank
+    private String password;
+
+    @NotBlank
+    private String passwordConfirm;
+
+    @AssertTrue
+    private boolean privacyCheck;
+
+    @AssertTrue
+    private boolean termsCheck;
+
+    public Member(){}
+
+    public Member(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
+        this.number = number;
+        this.userEmail = userEmail;
+        this.nickName = nickName;
+        this.password = password;
+        this.passwordConfirm = passwordConfirm;
+        this.privacyCheck = privacyCheck;
+        this.termsCheck = termsCheck;
+    }
+}
+```
+
+Annotation을 추가해 주었다.
+
+Annotation에 대한 목록은 https://hyeran-story.tistory.com/81 참조
+
+
+
+##### Unit Test를 진행해보자!
+
+```java
+package com.garb.gbcollector.domain.validation;
+
+import com.garb.gbcollector.login.domain.membervo.Member;
+import org.junit.jupiter.api.Test;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.Set;
+
+public class BeanValidationTest {
+
+    @Test
+    void beanValidation(){
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        Member member = new Member();
+        member.setNumber(0);
+        member.setUserEmail("sfsadf");
+        member.setNickName(" ");
+        member.setPassword(" ");
+        member.setPasswordConfirm("as");
+        member.setPrivacyCheck(false);
+        member.setTermsCheck(false);
+
+        Set<ConstraintViolation<Member>> violations = validator.validate(member);
+        for (ConstraintViolation<Member> violation : violations) {
+            System.out.println("violation = " + violation);
+            System.out.println("violation.getMessage() = " + violation.getMessage());
+        }
+
+    }
+```
+
+***>>>*** 실행결과
+
+![image](https://user-images.githubusercontent.com/76586084/185377145-53e1e638-523d-46c4-b1bf-bee0d232fd63.png)
+
+메시지를 넣어준 적이 없어서 기본적으로 설정되어있는 메시지들이 나오고 있지만 작동이 잘 되는것을 확인할 수 있다.
 
 
 
 
 
+본격적으로 ***```Bean Validation```***을 적용해보자! :gear::gear:
+
+##### ValidationItemControllerV3 를 만들자!
+
+```java
+package com.garb.gbcollector.login.web.validation;
+
+import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequiredArgsConstructor
+@Slf4j
+public class ValidationMemberControllerV3 {
+
+    private final MemberServiceImpl memberService;
+
+    @GetMapping("/memberInsertForm")
+    public String memberInsert(Model model) {
+        log.info("memberInsertForm IN");
+        model.addAttribute("member", new Member());
+        return "html/memberInsertForm";
+    }
+
+    @PostMapping("/memberInsert")
+    public String memberInsert(@Validated @ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+
+        //검증에 실패하면 다시 입력 폼으로!
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+            return "html/memberInsertForm";
+        }
+
+        // 성공 로직
+        memberService.join(member);
+
+        return "redirect:/";
+    }
+
+}
+```
+
+***```MemberValidator```*** 도 빠지고 없다 하지만! :scream:
+
+![image](https://user-images.githubusercontent.com/76586084/185380061-fc1dd202-2601-4bc4-a32f-e3506702f894.png)
+
+제대로 작동을 한다! ***```Member```***가 적용이 됀 모습니다!
+
+어떻게 자동으로 적용을 해서 사용을 했을까? 
+아까*** ```implementation 'org.springframework.boot:spring-boot-starter-validation'```*** 이것을 추가한 것이 그 의문의 답이다!:speak_no_evil:
+
+저 library가 있으면 Spring이 실행될 때 자동으로 ***```LocalValidatorFactoryBean```***을 글로벌 ***```Validator```***로 등록한다. 
+이***```Validator```***는 ***```NotNull```***같은 애노테이션을 보고 검증을 수행한다. 이렇게 ***```Validator```***가 적용되어 있기 때문에, ***```@Valid```***. ***```@Validaed```***만 적용하면 된다. 검증 오류가 발생하면, ***```FieldError```***, ***```ObjectError```***를 생생ㅅ해서 ***```BindingResult```***에 담아준다.
+
+
+
+***```@Validated```***, ***```@Valid```*** 둘 중 하나를 사용해도 모두 작동한다. Valid는 자바 표준 검증 애노테이션이고 Validated는 스프링 전용 검증 애노테이션이다 둘다 기능은 거의 동일하지만 ***````Validated```***는 ***```groups```***라는 기능을 제공한다.
 
 
 
 
 
+### 검증순서
+
+1. ***```@ModelAttribute```*** 각각의 필드에 타입 변환 시도
+   1. 성공하면 다음으로
+   2. 실패하면 ***```typeMismatch```***로 ***```FieldError```***추가
+2. ***```Validator```***적용
+
+
+
+***Binding에 성공한 필드만 Bean Validation 적용***
+
+BeanValidator는 바인딩에 실패한 필드는 BeanValidation을 적용하지 않는다.
+(일단 모델 객체에 바인딩 받는 값이 정상적으로 들어와야 검증도 의미가 있다.)
+
+***```@ModelAttribute```*** -> 각각의 필드 타입 변환 시도 -> 변환에 성공한 필드만 BeanValidation 적용
+
+***예)***
+
+- ***```nickName```***에 문자 "A"입력 -> 타입 변환 성공 -> ***```itemName```*** 필드에 BeanValidation 적용
+- ***```number```***에 문자 "A" 입력 -> "A"를 숫자 타입 변환 시도 실패 -> typeMimatch FieldError 추가 -> ***```price```***필드는 BeanValidation 적용 X
+
+
+
+##### Bean Validation - 에러 코드
+
+Bean Validation이 기본으로 제공하는 오류 메시지를 좀 더 자세히 변경하고 싶으면 어떻게 하면 될까?
+
+```
+Field error in object 'member' on field 'passwordConfirm': rejected value []; codes [NotBlank.member.passwordConfirm,NotBlank.passwordConfirm,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.passwordConfirm,passwordConfirm]; arguments []; default message [passwordConfirm]]; default message [공백일 수 없습니다]
+Field error in object 'member' on field 'password': rejected value []; codes [NotBlank.member.password,NotBlank.password,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.password,password]; arguments []; default message [password]]; default message [공백일 수 없습니다]
+Field error in object 'member' on field 'userEmail': rejected value []; codes [NotBlank.member.userEmail,NotBlank.userEmail,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.userEmail,userEmail]; arguments []; default message [userEmail]]; default message [공백일 수 없습니다]
+Field error in object 'member' on field 'termsCheck': rejected value [false]; codes [AssertTrue.member.termsCheck,AssertTrue.termsCheck,AssertTrue.boolean,AssertTrue]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.termsCheck,termsCheck]; arguments []; default message [termsCheck]]; default message [true여야 합니다]
+Field error in object 'member' on field 'number': rejected value [null]; codes [NotNull.member.number,NotNull.number,NotNull.java.lang.Integer,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.number,number]; arguments []; default message [number]]; default message [널이어서는 안됩니다]
+Field error in object 'member' on field 'privacyCheck': rejected value [false]; codes [AssertTrue.member.privacyCheck,AssertTrue.privacyCheck,AssertTrue.boolean,AssertTrue]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [member.privacyCheck,privacyCheck]; arguments []; default message [privacyCheck]]; default message [true여야 합니다]
+```
+
+에러코드가 이전에 공부했던 것처럼 자동으로 넣어져 있다!! 우리는 저것을 수정하면 됨!
+
+##### ex)
+
+***```@NotBlank```***
+
+- NotBlank.member.number
+- NotBlank.number
+- NotBlank.java.lang.String
+- NotBlank
+
+
+
+***```@Range```***
+
+- Range.member.number
+- Range.number
+- Range.java.lang.Integer
+- Range
+
+
+
+직접 해보자! errors.properties에 아래 추가
+
+```
+NotBlank = 공백X
+Range = {0}, {2} ~ {1} 허용
+```
+
+![image](https://user-images.githubusercontent.com/76586084/185390390-3665c8b6-46d9-4215-8dfa-7cabbdda65db.png)
+
+제대로 동작하는 것을 확인할 수 있다.
+
+예)
+
+```java
+@Data
+public class Member {
+
+    private Long id;
+
+    @NotNull
+    @Range(min=1, max=1000)
+    private Integer number;
+
+    @NotNull
+    @Email(message="이메일 형식에 맞춰 주세요")
+    private String userEmail;
+
+    @NotBlank
+    private String nickName;
+
+    @NotBlank
+    private String password;
+```
+
+위와같이 errorMessage를 설정할 수도 있다.
 
 
 
 
 
+***BeanValidation 메시지 찾는 순서***
+
+1. 생성된 메시지 코드 순서대로 ***```messageSource```***에서 메시지 찾기
+2. 애노테이션의 ***```message```*** 속성 사용 -> ***```@NotBlank(message="공백!" {0})```***
+3. 라이브러리 제공하는 기본 값 사용 -> 공백일 수 없다.
 
 
 
 
 
+### Bean Validation - 오브젝트 오류
+
+Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 오브젝트 관련 오류 ***```('ObjectError')```***는 어떻게 처리할 수 있을까?
+
+***```@ScriptAssert()```***라는 기능이 있지만, 사용하기 복잡하고 제약이 너무 많다.
+
+따라서 ***```ObjectError```***나 조금 복잡한 ***```FieldError```***는 직접 bindingResult로 처리해주는것이 맞다.
+
+```java
+    @PostMapping("/memberInsert")
+    public String memberInsert(@Validated @ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+
+        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+            bindingResult.rejectValue("nickName", "duplicated");
+        }
+
+        // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+        if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+            String memberPassword = member.getPassword();
+            String memberPasswordConfirm = member.getPasswordConfirm();
+            if (memberPassword != memberPasswordConfirm) {
+                bindingResult.reject("passwordSame");
+            }
+        }
 
 
+        //검증에 실패하면 다시 입력 폼으로!
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+            return "html/memberInsertForm";
+        }
 
+        // 성공 로직
+        memberService.join(member);
 
+        return "redirect:/";
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
+```
 
 
 

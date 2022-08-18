@@ -6,33 +6,34 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Controller
 @RequiredArgsConstructor
 @Slf4j
 public class ValidationMemberControllerV2 {
 
-    private final MemberServiceImpl memberService;
-
-    @GetMapping("/memberInsertForm")
-    public String memberInsert(Model model) {
-        log.info("memberInsertForm IN");
-        model.addAttribute("member", new Member());
-        return "html/memberInsertForm";
-    }
+//    private final MemberServiceImpl memberService;
+//    private final MemberValidator memberValidator;
+//
+//    @InitBinder
+//    public void init(WebDataBinder dataBinder) {
+//        dataBinder.addValidators(memberValidator);
+//    }
+//
+//    @GetMapping("/memberInsertForm")
+//    public String memberInsert(Model model) {
+//        log.info("memberInsertForm IN");
+//        model.addAttribute("member", new Member());
+//        return "html/memberInsertForm";
+//    }
 
 //    @PostMapping("/memberInsert")
 //    public String memberInsertV1(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
@@ -176,66 +177,100 @@ public class ValidationMemberControllerV2 {
 //        return "redirect:/";
 //    }
 
-    @PostMapping("/memberInsert")
-    public String memberInsertV4(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-        log.info("userEmail = {}", member.getUserEmail());
-        //검증 로직
-        if (member.getNumber() == null) {
-            bindingResult.rejectValue("number", "required");
-        }
-        if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
-            bindingResult.rejectValue("number", "range", new Object[]{0, 1000}, null);
-        }
-        if (!StringUtils.hasText(member.getNickName())) {
-            bindingResult.rejectValue("nickName", "required");
-        }
-        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
-            bindingResult.rejectValue("nickName", "duplicated");
-        }
-        if (!StringUtils.hasText(member.getPassword())) {
-            bindingResult.rejectValue("password", "required");
-        }
-        if (!StringUtils.hasText(member.getPasswordConfirm())) {
-            bindingResult.rejectValue("passwordConfirm", "required");
-        }
-        if (!StringUtils.hasText(member.getUserEmail())) {
-            bindingResult.rejectValue("userEmail", "required");
-        }
-        if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
-            bindingResult.rejectValue("userEmail", "formCheck");
-        }
-        if (!member.isPrivacyCheck()) {
-            bindingResult.addError(new FieldError("member", "privacyCheck", "개인정보처리방침 동의는 필수입니다."));
-        }
-        if (!member.isTermsCheck()) {
-            bindingResult.addError(new FieldError("member", "termsCheck", "이용약관 동의는 필수입니다."));
-        }
+//    @PostMapping("/memberInsert")
+//    public String memberInsertV4(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+//
+//        //검증 로직
+//        if (member.getNumber() == null) {
+//            bindingResult.rejectValue("number", "required");
+//        }
+//        if (member.getNumber() != null && (member.getNumber() <= 1000 || member.getNumber() >= 1)) {
+//            bindingResult.rejectValue("number", "range", new Object[]{0, 1000}, null);
+//        }
+//        if (!StringUtils.hasText(member.getNickName())) {
+//            bindingResult.rejectValue("nickName", "required");
+//        }
+//        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+//            bindingResult.rejectValue("nickName", "duplicated");
+//        }
+//        if (!StringUtils.hasText(member.getPassword())) {
+//            bindingResult.rejectValue("password", "required");
+//        }
+//        if (!StringUtils.hasText(member.getPasswordConfirm())) {
+//            bindingResult.rejectValue("passwordConfirm", "required");
+//        }
+//        if (!StringUtils.hasText(member.getUserEmail())) {
+//            bindingResult.rejectValue("userEmail", "required");
+//        }
+//        if (member.getUserEmail() != "" && emailTypeCheck(member.getUserEmail())) {
+//            bindingResult.rejectValue("userEmail", "formCheck");
+//        }
+//        if (!member.isPrivacyCheck()) {
+//            bindingResult.rejectValue("privacyCheck", "required");
+//        }
+//        if (!member.isTermsCheck()) {
+//            bindingResult.rejectValue("termsCheck", "required");
+//        }
+//
+//        // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+//        if (member.getPassword() != null && member.getPasswordConfirm() != null) {
+//            String memberPassword = member.getPassword();
+//            String memberPasswordConfirm = member.getPasswordConfirm();
+//            if (memberPassword != memberPasswordConfirm) {
+//                bindingResult.reject("passwordSame");
+//            }
+//        }
+//
+//        //검증에 실패하면 다시 입력 폼으로!
+//        if (bindingResult.hasErrors()) {
+//            log.info("errors = {}", bindingResult);
+//            return "html/memberInsertForm";
+//        }
+//
+//        // 성공 로직
+//        memberService.join(member);
+//
+//        return "redirect:/";
+//    }
 
-        // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
-        if (member.getPassword() != null && member.getPasswordConfirm() != null) {
-            String memberPassword = member.getPassword();
-            String memberPasswordConfirm = member.getPasswordConfirm();
-            if (memberPassword != memberPasswordConfirm) {
-                bindingResult.reject("passwordSame");
-            }
-        }
+//    @PostMapping("/memberInsert")
+//    public String memberInsertV5(@ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+//
+//        memberValidator.validate(member, bindingResult);
+//
+//
+//        //검증에 실패하면 다시 입력 폼으로!
+//        if (bindingResult.hasErrors()) {
+//            log.info("errors = {}", bindingResult);
+//            return "html/memberInsertForm";
+//        }
+//
+//        // 성공 로직
+//        memberService.join(member);
+//
+//        return "redirect:/";
+//    }
 
-        //검증에 실패하면 다시 입력 폼으로!
-        if (bindingResult.hasErrors()) {
-            log.info("errors = {}", bindingResult);
-            return "html/memberInsertForm";
-        }
+//    @PostMapping("/memberInsert")
+//    public String memberInsertV5(@Validated @ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+//
+//        //검증에 실패하면 다시 입력 폼으로!
+//        if (bindingResult.hasErrors()) {
+//            log.info("errors = {}", bindingResult);
+//            return "html/memberInsertForm";
+//        }
+//
+//        // 성공 로직
+//        memberService.join(member);
+//
+//        return "redirect:/";
+//    }
 
-        // 성공 로직
-        memberService.join(member);
 
-        return "redirect:/";
-    }
-
-    private boolean emailTypeCheck(String userEmail) {
-        String regex = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(userEmail);
-        return !matcher.matches();
-    }
+//    private boolean emailTypeCheck(String userEmail) {
+//        String regex = "^[_a-z0-9-]+(.[_a-z0-9-]+)*@(?:\\w+\\.)+\\w+$";
+//        Pattern pattern = Pattern.compile(regex);
+//        Matcher matcher = pattern.matcher(userEmail);
+//        return !matcher.matches();
+//    }
 }
