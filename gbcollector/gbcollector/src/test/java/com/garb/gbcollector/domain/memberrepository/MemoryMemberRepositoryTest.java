@@ -2,7 +2,7 @@ package com.garb.gbcollector.domain.memberrepository;
 
 import com.garb.gbcollector.login.domain.memberdao.MemberRepository;
 import com.garb.gbcollector.login.domain.memberdao.MemoryMemberRepository;
-import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -15,9 +15,9 @@ public class MemoryMemberRepositoryTest {
 
     @BeforeEach
     public void beforeEach() {
-        Member memberA = new Member(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
-        Member memberB = new Member(4, "jeorge@naver.com", "버버리빌", "asdf", "asdf", true, true);
-        Member memberC = new Member(5, "benn@naver.com", "뚱땡이", "asdf", "asdf", true, true);
+        MemberSaveForm memberA = new MemberSaveForm(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
+        MemberSaveForm memberB = new MemberSaveForm(4, "jeorge@naver.com", "버버리빌", "asdf", "asdf", true, true);
+        MemberSaveForm memberC = new MemberSaveForm(5, "benn@naver.com", "뚱땡이", "asdf", "asdf", true, true);
         memoryMemberRepository.save(memberA);
         memoryMemberRepository.save(memberB);
         memoryMemberRepository.save(memberC);
@@ -27,7 +27,7 @@ public class MemoryMemberRepositoryTest {
     @DisplayName("findByNickName Test!")
     void findByNickName() {
         //given
-        Member memberTest = new Member(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
+        MemberSaveForm memberTest = new MemberSaveForm(3, "bill@naver.com", "동생", "asdf", "asdf", true, true);
 
         //when
         boolean nickNameCheck1 = memoryMemberRepository.findByNickName("빌덴브로");

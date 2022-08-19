@@ -1,12 +1,11 @@
 package com.garb.gbcollector.login.web.validation;
 
 import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
-import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
 import org.springframework.validation.Validator;
 
 import java.util.regex.Matcher;
@@ -20,12 +19,12 @@ public class MemberValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return Member.class.isAssignableFrom(clazz);
+        return MemberSaveForm.class.isAssignableFrom(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        Member member = (Member) target;
+        MemberSaveForm member = (MemberSaveForm) target;
 
 
         //검증 로직

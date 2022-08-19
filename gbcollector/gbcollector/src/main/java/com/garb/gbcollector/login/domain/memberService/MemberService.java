@@ -1,10 +1,10 @@
 package com.garb.gbcollector.login.domain.memberservice;
 
-import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 
 public interface MemberService {
 
-    void join(Member member);
+    void join(MemberSaveForm member);
 
     boolean nickNameDuplicateCheck(String nickName);
 }

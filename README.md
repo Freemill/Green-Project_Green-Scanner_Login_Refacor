@@ -1400,7 +1400,144 @@ Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 �
 
 
 
+## Day 8
 
+---
+
+#### Baen Validation -한계
+
+만약 내가 Member class를 제약 조건이 다른 다른 로직에서 사용하려고 한다면 제약 조건간에 일치하지 않는 부분이 생겨 유기적으로 사용할 수 없게 된다. 그러한 문제를 해결해 보고자 ***```groups```*** 기능이 있다.
+
+
+
+#### Bean Validation - groups
+
+동일한 모델 객체를 동록할 때와 수정할 때 각각 다르게 검증하는 방법 (실무에서는 잘 사용하지 않는다. 복잡도가 올라감)
+
+
+
+
+
+#### Form 전송 객체 분리
+
+실무에서는 ***```groups```***를 잘 사용하지 않는다. 그 이유는 등록시 폼에서 전달하는 데이터가 ***```Item```*** 도메인 객체와 딱 맞지 않기 때문이다.
+
+#### 
+
+   
+
+#### Bean Validation - HTTP 메시지 컨버터
+
+***```@Valid```***, ***```@Validated```***는  ***```HttpMessageConverter```*** ***```(@RequestBody)```*** 에도 적용할 수 있다.
+
+
+
+>***``` 참고 ```***
+>
+>***```@ModelAttribute```*** 는 Http 요청 파라미터(URL 쿼리 스트링, POST Form)를 다룰 때 사용한다.
+>***```@RequestBody```***는 Http Body의 데이터를 객체로 변환할 때 사용한다. 주로 API JSON 요청을 다룰 때 사용한다.
+
+
+
+
+
+API로 정보를 보내는 실습을 해보자 Controller의 코드는 아래와 같다.
+
+##### ValidationMemberApiController
+
+```java
+package com.garb.gbcollector.login.web.validation;
+
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
+@RestController
+@RequestMapping("/validation/api/members")
+public class ValidationMemberApiController {
+
+    @PostMapping("/add")
+    public Object addMember(@RequestBody @Validated MemberSaveForm form, BindingResult bindingResult) {
+        log.info("API 컨틀롤러 호출");
+
+        if (bindingResult.hasErrors()) {
+            log.info("검증 오류 발생 errors = {}", bindingResult);
+            return bindingResult.getAllErrors();
+        }
+
+        log.info("성공 로직 실행");
+
+        return form;
+    }
+}
+```
+
+
+
+이 로직을 확인해보기 위해 ***```PostMan```***을 사용한다.
+
+![image](https://user-images.githubusercontent.com/76586084/185622292-f88a33be-9353-409a-853d-3614fd0c99ed.png)
+
+​	
+
+PostMan을 이용해 API를 JSON 형태롤 호출했다.! :happy:
+
+![image](https://user-images.githubusercontent.com/76586084/185622417-0f9e24e1-f27a-4ef5-98a5-ca76fd59948f.png)
+
+
+
+Log는 성공적으로 호출 되었고!
+
+![image](https://user-images.githubusercontent.com/76586084/185622545-bcd6d38e-285a-45e8-bcde-e8e84d2577e8.png)
+
+성공적으로 ReponseBody도 작동하였다!
+
+
+
+실패 상황도 보자 :fearful:
+
+![image](https://user-images.githubusercontent.com/76586084/185622857-0962040a-6074-4370-b478-1ef76e55faa7.png)
+
+userEmail을 형식에 맞게 보내지 않았다!
+
+![image](https://user-images.githubusercontent.com/76586084/185623085-4d74a70c-faa2-4c33-b3fc-1c5e595a7ea0.png)
+
+당연히 오류가 발생했고, Controller 호출도 되었다 :cowboy_hat_face:
+
+![image](https://user-images.githubusercontent.com/76586084/185623231-3046eb09-017e-4b79-8b4f-ffd735c56a6e.png)
+
+***```@ResponseBody```***에 오류메시지가 잘 나왔다
+
+
+
+이번엔 ***```TypeError```***를 확인해보자
+
+![image](https://user-images.githubusercontent.com/76586084/185623631-edace59a-2ab1-4922-87ce-3c2309c5c896.png)
+
+number에 String Type을 보냈다. :disappointed:
+
+```
+2022-08-19 21:59:20.774  WARN 2328 --- [nio-8080-exec-9] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `java.lang.Integer` from String "sdf": not a valid `java.lang.Integer` value; nested exception is com.fasterxml.jackson.databind.exc.InvalidFormatException: Cannot deserialize value of type `java.lang.Integer` from String "sdf": not a valid `java.lang.Integer` value<EOL> at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 2, column: 16] (through reference chain: com.garb.gbcollector.login.domain.membervo.MemberSaveForm["number"])]
+
+```
+
+이런 오류 메시지만 뜨고 Controller는 작동하지 않았다...
+
+![image](https://user-images.githubusercontent.com/76586084/185623861-d82dccb0-406b-4068-87f5-8759b2ac88c9.png)
+
+이렇게 뜸.
+
+
+
+#### :last_quarter_moon_with_face: 어쨋든 JSON 객체로 ***```MemberSaveForm```***를 만들어야 하는데 못 만듦:first_quarter_moon_with_face:
+
+기억해두자(후에 이를 해결할 것이다....)
 
 
 

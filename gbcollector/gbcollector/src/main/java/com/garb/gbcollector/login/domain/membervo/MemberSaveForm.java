@@ -9,7 +9,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class Member {
+public class MemberSaveForm {
 
     private Long id;
 
@@ -36,9 +36,9 @@ public class Member {
     @AssertTrue
     private boolean termsCheck;
 
-    public Member(){}
+    public MemberSaveForm(){}
 
-    public Member(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
+    public MemberSaveForm(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
         this.number = number;
         this.userEmail = userEmail;
         this.nickName = nickName;

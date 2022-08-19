@@ -1,16 +1,14 @@
 package com.garb.gbcollector.login.web.validation;
 
 import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
-import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -25,12 +23,12 @@ public class ValidationMemberControllerV3 {
     @GetMapping("/memberInsertForm")
     public String memberInsert(Model model) {
         log.info("memberInsertForm IN");
-        model.addAttribute("member", new Member());
+        model.addAttribute("member", new MemberSaveForm());
         return "html/memberInsertForm";
     }
 
     @PostMapping("/memberInsert")
-    public String memberInsert(@Validated @ModelAttribute Member member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    public String memberInsert(@Validated @ModelAttribute MemberSaveForm member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (memberService.nickNameDuplicateCheck(member.getNickName())) {
             bindingResult.rejectValue("nickName", "duplicated");

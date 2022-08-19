@@ -1,6 +1,6 @@
 package com.garb.gbcollector.domain.validation;
 
-import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
@@ -16,7 +16,7 @@ public class BeanValidationTest {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
 
-        Member member = new Member();
+        MemberSaveForm member = new MemberSaveForm();
         member.setNumber(0);
         member.setUserEmail("sfsadf");
         member.setNickName(" ");
@@ -25,8 +25,8 @@ public class BeanValidationTest {
         member.setPrivacyCheck(false);
         member.setTermsCheck(false);
 
-        Set<ConstraintViolation<Member>> violations = validator.validate(member);
-        for (ConstraintViolation<Member> violation : violations) {
+        Set<ConstraintViolation<MemberSaveForm>> violations = validator.validate(member);
+        for (ConstraintViolation<MemberSaveForm> violation : violations) {
             System.out.println("violation = " + violation);
             System.out.println("violation.getMessage() = " + violation.getMessage());
         }
