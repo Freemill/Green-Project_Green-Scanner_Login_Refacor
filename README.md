@@ -349,7 +349,7 @@ Object도 유사하게 주 가지 생성자를 제공한다.
 
 
 
-사용자의 입력 데이터가 컨트롤러의 ***```@ModelAttribute```***에 바인딩되는 시점에 오류가 발생하면 모델 객체에 사용자 입력 값을 유지하기 어렵다. 예를 들어서 숫자에 숫자가 아닌 문자가 입력된다면 가격은 ```Integer``` 타입으로 문자를 보관할 수 있는 방법이 없다. 그래서 오류가 발생한 경우 사용자가 입력 값을 보관하는 별도의 방법이 필요하다. 그리고 이렇게 보관한 사용자 입력 값을 검증 오류 발생시 화면에 다시 출력하면 된다.
+사용자의 입력 데이터가 컨트롤러의 ***```@ModelAttribute```*** 에 바인딩되는 시점에 오류가 발생하면 모델 객체에 사용자 입력 값을 유지하기 어렵다. 예를 들어서 숫자에 숫자가 아닌 문자가 입력된다면 가격은 ```Integer``` 타입으로 문자를 보관할 수 있는 방법이 없다. 그래서 오류가 발생한 경우 사용자가 입력 값을 보관하는 별도의 방법이 필요하다. 그리고 이렇게 보관한 사용자 입력 값을 검증 오류 발생시 화면에 다시 출력하면 된다.
 
 ```FieldError```는 오류 발생시 사용자 입력 값을 저장하는 기능을 제공한다.
 
@@ -367,7 +367,7 @@ Object도 유사하게 주 가지 생성자를 제공한다.
 
 ![image](https://user-images.githubusercontent.com/76586084/184831720-88f972ce-bbb8-4749-aa0d-eaaa993d1180.png)
 
-***```codes```***, ***```arguments```***를 활용하면 된다!  
+***```codes```*** , ***```arguments```*** 를 활용하면 된다!  
 
 
 
@@ -458,20 +458,20 @@ bindingResult.addError(new FieldError("member", "nickName", member.getNickName()
 
 여기서 또 Version up을 해보자 .
 
-지금까지 ***```FieldError```***와 ***```ObjectError```***를 다루기 너무 번거로웠다.
+지금까지 ***```FieldError```*** 와 ***```ObjectError```*** 를 다루기 너무 번거로웠다.
 또한 오류코드도 조금 더 자동화 시킬 수 있을것 같다.
 
 
 
-컨트롤러에서 ***```BindingResult```***는 검증해야 할 객체인 ***```target```***바로 다음에 온다. 따라서  ***```BindingResult```***는 이미 본인이 검증해야 할 객체인 ***```target```***을 알고 있다.
+컨트롤러에서 ***```BindingResult```*** 는 검증해야 할 객체인 ***```target```*** 바로 다음에 온다. 따라서  ***```BindingResult```*** 는 이미 본인이 검증해야 할 객체인 ***```target```*** 을 알고 있다.
 
 
 
-##### ***```rejectValue()```***, ***```reject()```*** 
+##### ***```rejectValue()```*** , ***```reject()```***  
 
-그리고 ***```BindingResult```***가 제공하는 ***```rejectValue()```***, ***```reject()```*** 를 사용하면 ***```FieldError```***, ***```ObjectError```***를 직접 생성하지 않고, 깔끔하게 검증 오류를 다룰 수 있다.
+그리고 ***```BindingResult```*** 가 제공하는 ***```rejectValue()```*** , ***```reject()```***  를 사용하면 ***```FieldError```*** , ***```ObjectError```*** 를 직접 생성하지 않고, 깔끔하게 검증 오류를 다룰 수 있다.
 
-***```rejectValue()```***, ***```reject()```*** 를 사용해서 기존 코드를 단순화 해보자. :shallow_pan_of_food:
+***```rejectValue()```*** , ***```reject()```***  를 사용해서 기존 코드를 단순화 해보자. :shallow_pan_of_food:
 
 ```java
 @PostMapping("/memberInsert")
@@ -563,12 +563,12 @@ public class MessageCodesResolverTest {
 
 보면 알 수 있듯이 resolveMessageCodes를 사용하면 에러코드가 여러개 자동으로 생성된다. 
 
-***```BindingResult.rejectValue()```***를 사용하면 자동으로 저 codesResolver를 호출해 ***```New FieldError()```*** 여기에 저기 생성된 에러 코드들을 순서대로 넣어준다. 제일 Detail한 순서대로!!!
+***```BindingResult.rejectValue()```*** 를 사용하면 자동으로 저 codesResolver를 호출해 ***```New FieldError()```***  여기에 저기 생성된 에러 코드들을 순서대로 넣어준다. 제일 Detail한 순서대로!!!
 required.member.number << required.number << required.java.lang.String << required
 
 
 
-##### ***```DefaultMessageCodesResolver```*** 의 기본 메시지 생성 규칙
+##### ***```DefaultMessageCodesResolver```***  의 기본 메시지 생성 규칙
 
 ##### 객체오류
 
@@ -610,14 +610,14 @@ required.member.number << required.number << required.java.lang.String << requir
 
 ***핵심은 구체적인 것에서! 덜 구체적인 것으로!***
 
-***```MessageCodesResolver```***는 ***```required.member.name```***처럼 구체적인 것을 먼저 만들어주고, ***```requied```***처럼 덜 구체적인 것을 나중에 만든다.
+***```MessageCodesResolver```*** 는 ***```required.member.name```*** 처럼 구체적인 것을 먼저 만들어주고, ***```requied```*** 처럼 덜 구체적인 것을 나중에 만든다.
 
 
 
 ***왜 이렇게 복잡하게 사용하는가?***
 
 모든 오류 코드에 대해서 메시지를 각각 다 정의하면 개발자 입장에서 관리하기 힘들다.
-크게 중요하지 않은 메시지는 범용성 있는 ***```requied```*** 같은 메시지로 끝내고, 정말 중요한 메시지는 꼭 필요할 때 구체적으로 적어서 사용하는 방식이 더 효과적이다.
+크게 중요하지 않은 메시지는 범용성 있는 ***```requied```***  같은 메시지로 끝내고, 정말 중요한 메시지는 꼭 필요할 때 구체적으로 적어서 사용하는 방식이 더 효과적이다.
 
 아래와 같이 만들어보자!:rotating_light:
 
@@ -682,7 +682,7 @@ ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "name", "required")
 
 검증 오류는 다음과 같이 2가지로 구분 할 수 있다.
 
-- 개발자가 직접 설정한 오류 코드 -> ***```rejectValue()```***를 직접 호출
+- 개발자가 직접 설정한 오류 코드 -> ***```rejectValue()```*** 를 직접 호출
 - 스프링이 직접 검증 오류에 추가한 경우(주로 타입 정보가 맞지 않음)
 
 
@@ -701,10 +701,10 @@ ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "name", "required")
 
 4가지 errorCode를 보면 다음과 같다.
 
-- ***```typeMistmatch.memer.number```***
-- ***```typeMistmatch.number```***
-- ***```typeMistmatch.java.lang.Integer```***
-- ***```typeMistmatch```***
+- ***```typeMistmatch.memer.number```*** 
+- ***```typeMistmatch.number```*** 
+- ***```typeMistmatch.java.lang.Integer```*** 
+- ***```typeMistmatch```*** 
 
 위에서 봤던것과 똑같은 형태!
 
@@ -941,13 +941,13 @@ public class ValidationMemberControllerV2 {
 
 
 
-스프링이 ***```Validator```*** 인터페이스르르 별도로 제공하는 이뉴느 체계적으로 검증 기능을 도입하기 위해서다. 그런데 앞에서는 검증기를 직접 불러서 사용했고, 이렇게 사용해도 된다. 그런데 ***```Validator```*** 인터페이스를 사용해서 검증기를 만들면 스프링의 추가적인 도움을 받을 수 있다.
+스프링이 ***```Validator```***  인터페이스르르 별도로 제공하는 이뉴느 체계적으로 검증 기능을 도입하기 위해서다. 그런데 앞에서는 검증기를 직접 불러서 사용했고, 이렇게 사용해도 된다. 그런데 ***```Validator```***  인터페이스를 사용해서 검증기를 만들면 스프링의 추가적인 도움을 받을 수 있다.
 
 
 
 ##### WebDataBinder를 통해서 사용해보기
 
-***```WebDataBinder```***는 스프링의 파라미터 바인딩의 역할을 해주고 검증 기능도 내부에 포함된다.
+***```WebDataBinder```*** 는 스프링의 파라미터 바인딩의 역할을 해주고 검증 기능도 내부에 포함된다.
 
 
 
@@ -982,14 +982,14 @@ public String memberInsertV5(@Validated @ModelAttribute Member member, BindingRe
 }
 ```
 
-이렇게 하면 이제***```@Validated```***가 붙어있는 것에서는 ***```@InitBinder```***가 동작한다.
+이렇게 하면 이제***```@Validated```*** 가 붙어있는 것에서는 ***```@InitBinder```*** 가 동작한다.
 
 
 
 ***동작 방식***
 
-***```@Validated```***는 검증기를 실행하라는 애노테이션이다.
-이 애노테이션이 붙으면 앞서 ***```WebDataBinder```***에 등록한 검증기를 찾아서 실행한다. 그런데 여러 검증기를 등록한다면 그 중에 어떤 검증기가 실행되어야 할지 구분이 필요하다. 이때 ***```supports()```***가 사용된다. 여기서 ***```supports(Member.class)```***가 호출되고, 결과가 ***true***이므로 ***```ItemValidator```***의 ***```validate()```*** 가 호출된다.
+***```@Validated```*** 는 검증기를 실행하라는 애노테이션이다.
+이 애노테이션이 붙으면 앞서 ***```WebDataBinder```*** 에 등록한 검증기를 찾아서 실행한다. 그런데 여러 검증기를 등록한다면 그 중에 어떤 검증기가 실행되어야 할지 구분이 필요하다. 이때 ***```supports()```*** 가 사용된다. 여기서 ***```supports(Member.class)```*** 가 호출되고, 결과가 ***true***이므로 ***```ItemValidator```*** 의 ***```validate()```***  가 호출된다.
 
 
 
@@ -1011,16 +1011,16 @@ public class GbcollectorApplication {
 }
 ```
 
-이렇게 넣으면 됨 이렇게 하면 기존 컨트롤러의 ***```@InitBinder```***를 제거해도 글로벌 설정으로 정상 동작하는 것을 확인할 수 있다.
+이렇게 넣으면 됨 이렇게 하면 기존 컨트롤러의 ***```@InitBinder```*** 를 제거해도 글로벌 설정으로 정상 동작하는 것을 확인할 수 있다.
 
 
 
 ##### 참고
 
-> 검증시 ***```@Validated```*** , ***```@Valid```*** 둘 다 사용 가능하다.
-> ***```javax.validation.@Valid```***를 사용하려면 ***```build.gradle```*** 의존 관계가 추가가 필요
-> ***```implementation 'org.springframework.boot::spring-boot-starter-validation```***
-> ***```@Validated```*** 는 스프링 전용 검증 애노테이션이고, ***```@Valid```***는 자바 표준 검증 애노테이션이다.
+> 검증시 ***```@Validated```***  , ***```@Valid```***  둘 다 사용 가능하다.
+> ***```javax.validation.@Valid```*** 를 사용하려면 ***```build.gradle```***  의존 관계가 추가가 필요
+> ***```implementation 'org.springframework.boot::spring-boot-starter-validation```*** 
+> ***```@Validated```***  는 스프링 전용 검증 애노테이션이고, ***```@Valid```*** 는 자바 표준 검증 애노테이션이다.
 > 자세한 내용은 다음에!
 
 
@@ -1031,14 +1031,14 @@ public class GbcollectorApplication {
 
 검증 기능을 지금처럼 매번 코드로 작성하는 것은 상당히 번거롭다. 특히 특정 필드에 대한 검증 로직은 대부분 빈 값인지 아닌지, 특정 크기를 넘는지 아닌지와 같이 매우 일반적인 로직이다. 다음 코드를 보자.
 
-ex) ***```@NotBlank```*** , ***```@NotNull```***.  ***```Range(Min=, max=)```***
+ex) ***```@NotBlank```***  , ***```@NotNull```*** .  ***```Range(Min=, max=)```*** 
 
 이런 검증 로직을 모든 프로젝트에 적용하 수 있게 고통화하고, 표준화 한 것이 바로 ***Bean Validation***이다.
 ***Bean Validation***을 잘 활용하면, 애노테이션 하나로 검증 로직을 매우 편리하게 적용할 수 있다.
 
 
 
-***```BeanValidation```***이란?
+***```BeanValidation```*** 이란?
 
 먼저 Bean Validation은 특정한 구현체가 아니라 Bean Validation 2.0(JSR-380)이라는 기술 표준이다. 쉽게 이야기해서 검증 애노테이션과 여러 인터페이스의 모음이다. 마치 JPA가 표준 기술이고 그 구현체로 하이버네이트가 있는 것과 같다.
 
@@ -1062,7 +1062,7 @@ implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 
 
-***```Member```***
+***```Member```*** 
 
 ```java
 package com.garb.gbcollector.login.domain.membervo;
@@ -1171,7 +1171,7 @@ public class BeanValidationTest {
 
 
 
-본격적으로 ***```Bean Validation```***을 적용해보자! :gear::gear:
+본격적으로 ***```Bean Validation```*** 을 적용해보자! :gear::gear:
 
 ##### ValidationItemControllerV3 를 만들자!
 
@@ -1225,21 +1225,21 @@ public class ValidationMemberControllerV3 {
 }
 ```
 
-***```MemberValidator```*** 도 빠지고 없다 하지만! :scream:
+***```MemberValidator```***  도 빠지고 없다 하지만! :scream:
 
 ![image](https://user-images.githubusercontent.com/76586084/185380061-fc1dd202-2601-4bc4-a32f-e3506702f894.png)
 
-제대로 작동을 한다! ***```Member```***가 적용이 됀 모습니다!
+제대로 작동을 한다! ***```Member```*** 가 적용이 됀 모습니다!
 
 어떻게 자동으로 적용을 해서 사용을 했을까? 
-아까*** ```implementation 'org.springframework.boot:spring-boot-starter-validation'```*** 이것을 추가한 것이 그 의문의 답이다!:speak_no_evil:
+아까*** ```implementation 'org.springframework.boot:spring-boot-starter-validation'```***  이것을 추가한 것이 그 의문의 답이다!:speak_no_evil:
 
-저 library가 있으면 Spring이 실행될 때 자동으로 ***```LocalValidatorFactoryBean```***을 글로벌 ***```Validator```***로 등록한다. 
-이***```Validator```***는 ***```NotNull```***같은 애노테이션을 보고 검증을 수행한다. 이렇게 ***```Validator```***가 적용되어 있기 때문에, ***```@Valid```***. ***```@Validaed```***만 적용하면 된다. 검증 오류가 발생하면, ***```FieldError```***, ***```ObjectError```***를 생생ㅅ해서 ***```BindingResult```***에 담아준다.
+저 library가 있으면 Spring이 실행될 때 자동으로 ***```LocalValidatorFactoryBean```*** 을 글로벌 ***```Validator```*** 로 등록한다. 
+이***```Validator```*** 는 ***```NotNull```*** 같은 애노테이션을 보고 검증을 수행한다. 이렇게 ***```Validator```*** 가 적용되어 있기 때문에, ***```@Valid```*** . ***```@Validaed```*** 만 적용하면 된다. 검증 오류가 발생하면, ***```FieldError```*** , ***```ObjectError```*** 를 생생ㅅ해서 ***```BindingResult```*** 에 담아준다.
 
 
 
-***```@Validated```***, ***```@Valid```*** 둘 중 하나를 사용해도 모두 작동한다. Valid는 자바 표준 검증 애노테이션이고 Validated는 스프링 전용 검증 애노테이션이다 둘다 기능은 거의 동일하지만 ***````Validated```***는 ***```groups```***라는 기능을 제공한다.
+***```@Validated```*** , ***```@Valid```***  둘 중 하나를 사용해도 모두 작동한다. Valid는 자바 표준 검증 애노테이션이고 Validated는 스프링 전용 검증 애노테이션이다 둘다 기능은 거의 동일하지만 ***````Validated```*** 는 ***```groups```*** 라는 기능을 제공한다.
 
 
 
@@ -1247,10 +1247,10 @@ public class ValidationMemberControllerV3 {
 
 ### 검증순서
 
-1. ***```@ModelAttribute```*** 각각의 필드에 타입 변환 시도
+1. ***```@ModelAttribute```***  각각의 필드에 타입 변환 시도
    1. 성공하면 다음으로
-   2. 실패하면 ***```typeMismatch```***로 ***```FieldError```***추가
-2. ***```Validator```***적용
+   2. 실패하면 ***```typeMismatch```*** 로 ***```FieldError```*** 추가
+2. ***```Validator```*** 적용
 
 
 
@@ -1259,12 +1259,12 @@ public class ValidationMemberControllerV3 {
 BeanValidator는 바인딩에 실패한 필드는 BeanValidation을 적용하지 않는다.
 (일단 모델 객체에 바인딩 받는 값이 정상적으로 들어와야 검증도 의미가 있다.)
 
-***```@ModelAttribute```*** -> 각각의 필드 타입 변환 시도 -> 변환에 성공한 필드만 BeanValidation 적용
+***```@ModelAttribute```***  -> 각각의 필드 타입 변환 시도 -> 변환에 성공한 필드만 BeanValidation 적용
 
 ***예)***
 
-- ***```nickName```***에 문자 "A"입력 -> 타입 변환 성공 -> ***```itemName```*** 필드에 BeanValidation 적용
-- ***```number```***에 문자 "A" 입력 -> "A"를 숫자 타입 변환 시도 실패 -> typeMimatch FieldError 추가 -> ***```price```***필드는 BeanValidation 적용 X
+- ***```nickName```*** 에 문자 "A"입력 -> 타입 변환 성공 -> ***```itemName```***  필드에 BeanValidation 적용
+- ***```number```*** 에 문자 "A" 입력 -> "A"를 숫자 타입 변환 시도 실패 -> typeMimatch FieldError 추가 -> ***```price```*** 필드는 BeanValidation 적용 X
 
 
 
@@ -1285,7 +1285,7 @@ Field error in object 'member' on field 'privacyCheck': rejected value [false]; 
 
 ##### ex)
 
-***```@NotBlank```***
+***```@NotBlank```*** 
 
 - NotBlank.member.number
 - NotBlank.number
@@ -1294,7 +1294,7 @@ Field error in object 'member' on field 'privacyCheck': rejected value [false]; 
 
 
 
-***```@Range```***
+***```@Range```*** 
 
 - Range.member.number
 - Range.number
@@ -1345,8 +1345,8 @@ public class Member {
 
 ***BeanValidation 메시지 찾는 순서***
 
-1. 생성된 메시지 코드 순서대로 ***```messageSource```***에서 메시지 찾기
-2. 애노테이션의 ***```message```*** 속성 사용 -> ***```@NotBlank(message="공백!" {0})```***
+1. 생성된 메시지 코드 순서대로 ***```messageSource```*** 에서 메시지 찾기
+2. 애노테이션의 ***```message```***  속성 사용 -> ***```@NotBlank(message="공백!" {0})```*** 
 3. 라이브러리 제공하는 기본 값 사용 -> 공백일 수 없다.
 
 
@@ -1355,11 +1355,11 @@ public class Member {
 
 ### Bean Validation - 오브젝트 오류
 
-Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 오브젝트 관련 오류 ***```('ObjectError')```***는 어떻게 처리할 수 있을까?
+Bean Validation에서 특정 필드***```('FieldError')```*** 가 아닌 해당 오브젝트 관련 오류 ***```('ObjectError')```*** 는 어떻게 처리할 수 있을까?
 
-***```@ScriptAssert()```***라는 기능이 있지만, 사용하기 복잡하고 제약이 너무 많다.
+***```@ScriptAssert()```*** 라는 기능이 있지만, 사용하기 복잡하고 제약이 너무 많다.
 
-따라서 ***```ObjectError```***나 조금 복잡한 ***```FieldError```***는 직접 bindingResult로 처리해주는것이 맞다.
+따라서 ***```ObjectError```*** 나 조금 복잡한 ***```FieldError```*** 는 직접 bindingResult로 처리해주는것이 맞다.
 
 ```java
     @PostMapping("/memberInsert")
@@ -1406,7 +1406,7 @@ Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 �
 
 #### Baen Validation -한계
 
-만약 내가 Member class를 제약 조건이 다른 다른 로직에서 사용하려고 한다면 제약 조건간에 일치하지 않는 부분이 생겨 유기적으로 사용할 수 없게 된다. 그러한 문제를 해결해 보고자 ***```groups```*** 기능이 있다.
+만약 내가 Member class를 제약 조건이 다른 다른 로직에서 사용하려고 한다면 제약 조건간에 일치하지 않는 부분이 생겨 유기적으로 사용할 수 없게 된다. 그러한 문제를 해결해 보고자 ***```groups```***  기능이 있다.
 
 
 
@@ -1420,7 +1420,7 @@ Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 �
 
 #### Form 전송 객체 분리
 
-실무에서는 ***```groups```***를 잘 사용하지 않는다. 그 이유는 등록시 폼에서 전달하는 데이터가 ***```Item```*** 도메인 객체와 딱 맞지 않기 때문이다.
+실무에서는 ***```groups```*** 를 잘 사용하지 않는다. 그 이유는 등록시 폼에서 전달하는 데이터가 ***```Item```***  도메인 객체와 딱 맞지 않기 때문이다.
 
 #### 
 
@@ -1428,14 +1428,14 @@ Bean Validation에서 특정 필드***```('FieldError')```***가 아닌 해당 �
 
 #### Bean Validation - HTTP 메시지 컨버터
 
-***```@Valid```***, ***```@Validated```***는  ***```HttpMessageConverter```*** ***```(@RequestBody)```*** 에도 적용할 수 있다.
+***```@Valid```*** , ***```@Validated```*** 는  ***```HttpMessageConverter```***  ***```(@RequestBody)```***  에도 적용할 수 있다.
 
 
 
->***``` 참고 ```***
+>***``` 참고 ```*** 
 >
->***```@ModelAttribute```*** 는 Http 요청 파라미터(URL 쿼리 스트링, POST Form)를 다룰 때 사용한다.
->***```@RequestBody```***는 Http Body의 데이터를 객체로 변환할 때 사용한다. 주로 API JSON 요청을 다룰 때 사용한다.
+>***```@ModelAttribute```***  는 Http 요청 파라미터(URL 쿼리 스트링, POST Form)를 다룰 때 사용한다.
+>***```@RequestBody```*** 는 Http Body의 데이터를 객체로 변환할 때 사용한다. 주로 API JSON 요청을 다룰 때 사용한다.
 
 
 
@@ -1480,7 +1480,7 @@ public class ValidationMemberApiController {
 
 
 
-이 로직을 확인해보기 위해 ***```PostMan```***을 사용한다.
+이 로직을 확인해보기 위해 ***```PostMan```*** 을 사용한다.
 
 ![image](https://user-images.githubusercontent.com/76586084/185622292-f88a33be-9353-409a-853d-3614fd0c99ed.png)
 
@@ -1512,11 +1512,11 @@ userEmail을 형식에 맞게 보내지 않았다!
 
 ![image](https://user-images.githubusercontent.com/76586084/185623231-3046eb09-017e-4b79-8b4f-ffd735c56a6e.png)
 
-***```@ResponseBody```***에 오류메시지가 잘 나왔다
+***```@ResponseBody```*** 에 오류메시지가 잘 나왔다
 
 
 
-이번엔 ***```TypeError```***를 확인해보자
+이번엔 ***```TypeError```*** 를 확인해보자
 
 ![image](https://user-images.githubusercontent.com/76586084/185623631-edace59a-2ab1-4922-87ce-3c2309c5c896.png)
 
@@ -1535,7 +1535,7 @@ number에 String Type을 보냈다. :disappointed:
 
 
 
-#### :last_quarter_moon_with_face: 어쨋든 JSON 객체로 ***```MemberSaveForm```***를 만들어야 하는데 못 만듦:first_quarter_moon_with_face:
+#### :last_quarter_moon_with_face: 어쨋든 JSON 객체로 ***```MemberSaveForm```*** 를 만들어야 하는데 못 만듦:first_quarter_moon_with_face:
 
 기억해두자(후에 이를 해결할 것이다....)
 
