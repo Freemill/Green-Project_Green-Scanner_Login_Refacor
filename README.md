@@ -1541,9 +1541,15 @@ number에 String Type을 보냈다. :disappointed:
 
 
 
+***```@ModelAttribute```*** ***vs*** ***```@RequestBody```*** 
 
+Http 요청 파라미터를 처리하는 ***```@ModelAttribute```*** 는 각각의 필드 단위로 세밀하게 적용된다. 그래서 특정 필드에 타입이 맞지 않는 오류가 발생해도 나머지 필드는 정상 처리할 수 있다. 
 
+***```HttpMessageConverter```*** 는  ***```@ModelAttribute```*** 와 다르게 각각의 필드 단위로 적용되는 것이 아니라, 전체 객체 단위로 적용된다.
+따라서 메시지 컨버터의 작동이 성공해서 ***```Member```*** 객체를 만들어야 ***```@Valid```*** , ***```@Validated```*** 가 적용된다.
 
+- ***```@ModelAttribute```*** 는 필드 단위로 정교하게 바인딩이 적용된다. 특정 필드가 바인딩 되지 않아도 나머지 필드는 정상 바인딩 되고, Validator를 사용한 검증도 적용할 수 있다.
+- ***```@RequestBody```***는 ***```HttpMessageConverter```*** 단계에서 JSON 데이터를 객체로 변경하지 못하면 이후 단계 자체가 진행않고 예외가 발생한다. 컨트롤러도 호출되지 않고, Validator도 적용할 수 없다.
 
 
 
