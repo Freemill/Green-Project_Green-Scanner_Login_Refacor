@@ -1553,6 +1553,136 @@ Http 요청 파라미터를 처리하는 ***```@ModelAttribute```*** 는 각각�
 
 
 
+## Day 9
+
+#### 로그인 기능 구현
+
+초기 코드
+
+***```LoginController```***
+
+```java
+package com.garb.gbcollector.login.domain.login;
+
+import com.garb.gbcollector.login.web.login.LoginForm;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+@Controller
+@Slf4j
+public class LoginController {
+
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") LoginForm form) {
+        return "html/login";
+    }
+}
+```
+
+
+
+***```LoginForm```***
+
+```java
+package com.garb.gbcollector.login.web.login;
+
+import javax.validation.constraints.NotEmpty;
+
+public class LoginForm {
+
+    @NotEmpty
+    private String userEmail;
+
+    @NotEmpty
+    private String password;
+}
+```
+
+
+
+***```LoginTestDataInit```*** - 로그인 기능을 Test하기 위해 등록해놓은 빈
+
+```java
+package com.garb.gbcollector.login.web;
+
+import com.garb.gbcollector.login.domain.memberdao.MemberRepository;
+import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+
+@Component
+@RequiredArgsConstructor
+public class LoginTestDataInit {
+
+    private final MemberRepository memberRepository;
+
+    @PostConstruct
+    public void init(){
+        memberRepository.save(new MemberSaveForm(1, "gildong@naver.com", "gildong", "killdong", "killdong", true, true));
+        memberRepository.save(new MemberSaveForm(2, "chulsoo@naver.com", "chulsoo", "chulsuck", "chulsuck", true, true));
+    }
+}
+```
+
+:new: 스프링부트를 시작하자마자 2명의 회원을 등록해 놓는다
+
+
+
+***```Login.html```***
+
+![image](https://user-images.githubusercontent.com/76586084/185789471-35ab7764-e32a-4d2b-9d4c-f5c08564545c.png)
+
+***```MemoryMemberRepository```***
+
+```java
+@Slf4j
+@Repository
+public class MemoryMemberRepository implements MemberRepository {
+
+    private static Map<Long, MemberSaveForm> memberStore = new ConcurrentHashMap<>();
+    private static Long sequence = 0L;
+
+    @Override
+    public void save(MemberSaveForm member) {
+        member.setId(++sequence);
+        log.info("member = {}", member);
+        memberStore.put(member.getId(), member);
+    }
+
+    @Override
+    public Optional<MemberSaveForm> findByEmail(MemberSaveForm member) {
+        return findAll().stream()
+                .filter(m -> m.getUserEmail().equals(member.getUserEmail()))
+                .findFirst();
+    }
+    //이 코드를 수정해 주었다. Optional<>를 활용했다. NPE를 예방하기 위해
+
+    @Override
+    public boolean findByNickName(String nickName) {
+        return !findAll().stream()
+                .filter(m -> m.getNickName().equals(nickName))
+                .findFirst().isEmpty();
+    }
+
+    @Override
+    public List<MemberSaveForm> findAll() {
+        return new ArrayList<>(memberStore.values());
+    }
+}
+```
+
+
+
+
+
+
+
+
+
 
 
 

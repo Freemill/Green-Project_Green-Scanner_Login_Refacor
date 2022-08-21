@@ -1,5 +1,6 @@
 package com.garb.gbcollector.login.domain.memberdao;
 
+import com.garb.gbcollector.login.domain.membervo.MemberLoginForm;
 import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -24,8 +26,10 @@ public class MemoryMemberRepository implements MemberRepository {
     }
 
     @Override
-    public boolean findByEmail(MemberSaveForm member) {
-        return false;
+    public Optional<MemberLoginForm> findByEmail(MemberLoginForm member) {
+        return findAll().stream()
+                .filter(m -> m.getUserEmail().equals(member.getUserEmail()))
+                .findFirst();
     }
 
     @Override
