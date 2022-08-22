@@ -1,7 +1,8 @@
 package com.garb.gbcollector.login.domain.memberservice;
 
 import com.garb.gbcollector.login.domain.memberdao.MemberRepository;
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ public class MemberServiceImpl implements MemberService{
     private final MemberRepository memberRepository;
 
     @Override
-    public void join(MemberSaveForm member) {
+    public void join(Member member) {
         memberRepository.save(member);
     }
 

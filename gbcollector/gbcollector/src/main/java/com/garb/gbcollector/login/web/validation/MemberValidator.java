@@ -1,7 +1,7 @@
 package com.garb.gbcollector.login.web.validation;
 
 import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

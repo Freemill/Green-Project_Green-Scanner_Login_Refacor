@@ -8,6 +8,12 @@
 
 <title>로그인</title>
 <link rel="stylesheet" type="text/css" th:href="@{../css/map.css}"/>
+	<style>
+		.field-error{
+			border-color: #dc3545;
+			color: #dc3545;
+		}
+	</style>
 </head>
 <body>
 	<!-- 공통 네비게이션: top -->
@@ -53,13 +59,20 @@
 		<div class="login-wrapper">
 			<div class="login-logo">　</div>
 			<div class="form-div-login">
-				<form class="login-form">
-					<input type="text" id="login-form-email" name="email" placeholder="이메일@example.com" />
-					<input type="password" id="login-form-pw" name="pw" placeholder="비밀번호" />
+				<form th:action th:object="${loginForm}" class="login-form" method="post">
+
+					<div th:if="${#fields.hasGlobalErrors()}">
+						<p class="field-error" th:each="err : ${#fields.globalErrors()}" th:text="${err}">전체 오류 메시지</p>
+					</div>
+
+					<input type="text" id="login-form-email" th:field="*{userEmail}" th:errorclass = "field-error" placeholder="이메일@example.com" />
+					<div class="field-error" th:errors="*{userEmail}"/>
+					<input type="password" id="login-form-pw" th:field="*{password}" th:errorclass="field-error" name="pw" placeholder="비밀번호" />
+					<div class="field-error" th:errors="*{password}"/>
 					<label id="login-form-checkbox">
 						<input type="checkbox" name="remember" value="rememberMe">  로그인 기록 저장
 					</label>	
-					<input type="button" class="login-form-btn" id="loginBtn" value="로그인" />					
+					<button type="submit" class="login-form-btn" id="loginBtn">로그인</button>
 				</form>
 			</div>
 			<div class="form-div-btns">

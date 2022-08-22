@@ -1,6 +1,6 @@
 package com.garb.gbcollector.domain.validation;
 
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;

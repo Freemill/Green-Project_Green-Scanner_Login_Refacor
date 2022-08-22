@@ -1,6 +1,6 @@
 package com.garb.gbcollector.login.web.validation;
 
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;

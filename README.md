@@ -1636,30 +1636,179 @@ public class LoginTestDataInit {
 
 ![image](https://user-images.githubusercontent.com/76586084/185789471-35ab7764-e32a-4d2b-9d4c-f5c08564545c.png)
 
+#### Form 전송 객체 분리 - 폼 데이터 전달을 위한 별도의 객체 사용(groups가 아닌 다른 방법을 사용해본다.)
+
+위에서 로그인을 할 때 회원가입(number, userEmail, nickName, ...)을 할때와는 다른 데이터(userEmail, password)를 전송해야 하는것을 볼 수 있다. 따라서 전송 객체를 분리해서 사용해야 한다.
+
+- ***```Html Form```*** -> ***```MemberLoginForm```*** -> ***```Controller```*** -> ***```Item 생성```*** -> ***```Repository```***
+  - 장점 : 전송하는 폼 데이터가 복잡해도 거기게 맞춘 별도의 폼 객체를 사용해서 데이터를 전달 받을 수 있다. 보통 등록과, 수정용으로 별도의 폼 객체를 만들기 때문에 검증이 중복되지 않는다.
+  - 단점 : 폼 데이터를 기반으로 컨토를로에서 Item 객체를 생성하는 변환 과정이 추가된다.
+
+
+
+
+
+## Day 10
+
+---
+
+##### From 전송 객체를 분리해보자
+
+![image-20220822193912298](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220822193912298.png)
+
+domain에서 사용할 ***```Member```***  객체와 web영역에서 사용할 ***```MemberLoginForm```*** , ***```MemberSaveForm```*** 으로 분리한다.
+
+***```Member```***
+
+```java
+package com.garb.gbcollector.login.domain.membervo;
+
+import lombok.Data;
+
+@Data
+public class Member {
+
+    private Long id;
+
+    private Integer number;
+
+    private String userEmail;
+
+    private String nickName;
+
+    private String password;
+
+    private String passwordConfirm;
+
+    private boolean privacyCheck;
+
+    private boolean termsCheck;
+
+    public Member(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
+        this.number = number;
+        this.userEmail = userEmail;
+        this.nickName = nickName;
+        this.password = password;
+        this.passwordConfirm = passwordConfirm;
+        this.privacyCheck = privacyCheck;
+        this.termsCheck = termsCheck;
+    }
+}
+```
+
+***```MemberSaveForm```***
+
+```java
+package com.garb.gbcollector.login.web.validation.form;
+
+import lombok.Data;
+import org.hibernate.validator.constraints.Range;
+
+import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Data
+public class MemberSaveForm {
+
+    private Long id;
+
+    @NotNull
+    @Range(min=1, max=1000)
+    private Integer number;
+
+    @NotBlank
+    @Email
+    private String userEmail;
+
+    @NotBlank
+    private String nickName;
+
+    @NotBlank
+    private String password;
+
+    @NotBlank
+    private String passwordConfirm;
+
+    @AssertTrue
+    private boolean privacyCheck;
+
+    @AssertTrue
+    private boolean termsCheck;
+
+    public MemberSaveForm(){}
+
+    public MemberSaveForm(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
+        this.number = number;
+        this.userEmail = userEmail;
+        this.nickName = nickName;
+        this.password = password;
+        this.passwordConfirm = passwordConfirm;
+        this.privacyCheck = privacyCheck;
+        this.termsCheck = termsCheck;
+    }
+}
+```
+
+***```MemberLoginForm```***
+
+```java
+package com.garb.gbcollector.login.web.validation.form;
+
+import lombok.Data;
+
+import javax.validation.constraints.NotEmpty;
+
+@Data
+public class MemberLoginForm {
+
+    @NotEmpty
+    private String userEmail;
+
+    @NotEmpty
+    private String password;
+
+}
+```
+
 ***```MemoryMemberRepository```***
 
 ```java
+package com.garb.gbcollector.login.domain.memberdao;
+
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberLoginForm;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @Repository
 public class MemoryMemberRepository implements MemberRepository {
 
-    private static Map<Long, MemberSaveForm> memberStore = new ConcurrentHashMap<>();
+    private static Map<Long, Member> memberStore = new ConcurrentHashMap<>();
     private static Long sequence = 0L;
 
     @Override
-    public void save(MemberSaveForm member) {
+    public void save(Member member) {
         member.setId(++sequence);
         log.info("member = {}", member);
         memberStore.put(member.getId(), member);
     }
 
     @Override
-    public Optional<MemberSaveForm> findByEmail(MemberSaveForm member) {
+    public Optional<Member> findByEmail(Member member) {
         return findAll().stream()
                 .filter(m -> m.getUserEmail().equals(member.getUserEmail()))
                 .findFirst();
     }
-    //이 코드를 수정해 주었다. Optional<>를 활용했다. NPE를 예방하기 위해
 
     @Override
     public boolean findByNickName(String nickName) {
@@ -1669,25 +1818,137 @@ public class MemoryMemberRepository implements MemberRepository {
     }
 
     @Override
-    public List<MemberSaveForm> findAll() {
+    public List<Member> findAll() {
         return new ArrayList<>(memberStore.values());
     }
 }
 ```
 
+***```ValidationMemberControllerV3```***
+
+```java
+package com.garb.gbcollector.login.web.validation;
+
+import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequiredArgsConstructor
+@Slf4j
+public class ValidationMemberControllerV3 {
+
+    private final MemberServiceImpl memberService;
+
+    @GetMapping("/memberInsertForm")
+    public String memberInsert(Model model) {
+        log.info("memberInsertForm IN");
+        model.addAttribute("member", new MemberSaveForm());
+        return "html/memberInsertForm";
+    }
+
+    @PostMapping("/memberInsert")
+    public String memberInsert(@Validated @ModelAttribute("member") MemberSaveForm form, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+
+        if (memberService.nickNameDuplicateCheck(form.getNickName())) {
+            bindingResult.rejectValue("nickName", "duplicated");
+        }
+
+        // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
+        if (form.getPassword() != null && form.getPasswordConfirm() != null) {
+            String memberPassword = form.getPassword();
+            String memberPasswordConfirm = form.getPasswordConfirm();
+            if (memberPassword != memberPasswordConfirm) {
+                bindingResult.reject("passwordSame");
+            }
+        }
 
 
+        //검증에 실패하면 다시 입력 폼으로!
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+            return "html/memberInsertForm";
+        }
 
+        // 성공 로직 -> 수정됨 
+        Member member = new Member(form.getNumber(), form.getUserEmail(), form.getNickName(), form.getPassword(), form.getPasswordConfirm(), form.isPrivacyCheck(), form.isTermsCheck());
+        memberService.join(member);
+        return "redirect:/";
+    }
 
+}
+```
 
+***```LoginService```***
 
+```java
+@Service
+@RequiredArgsConstructor
+public class LoginService {
 
+    private final MemberRepository memberRepository;
 
+    /**
+     * @return null 로그인 실패
+     */
+    public Member login(String userEmail, String password) {
+        return memberRepository.findByEmail(userEmail)
+                .filter(m -> m.getPassword().equals(password))
+                .orElse(null);
+    }
 
+}
+```
 
+***```LoginController```***
 
+```java
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
 
+    private final LoginService loginService;
 
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") MemberLoginForm form) {
+        return "html/login";
+    };
+
+    @PostMapping("/login")
+    public String login(@Valid @ModelAttribute("loginForm") MemberLoginForm form, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "html/login";
+        }
+
+        Member loginMember = loginService.login(form.getUserEmail(), form.getPassword());
+
+        if (loginMember == null) {
+            log.info("errors = {}", bindingResult);
+            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "html/login";
+        }
+
+        //로그인 성공 처리 TODO
+
+        return "redirect:/";
+    }
+}
+```
+
+:monkey: 로직을 작성했고 아래와 같이 잘 작동하는것을 확인할 수 있다.:monkey_face:
+
+![image](https://user-images.githubusercontent.com/76586084/185922911-f36d2717-a2f4-4276-84cb-7d3d3748e03d.png)
 
 
 

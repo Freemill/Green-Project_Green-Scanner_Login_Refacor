@@ -1,7 +1,8 @@
 package com.garb.gbcollector.login.domain.memberdao;
 
-import com.garb.gbcollector.login.domain.membervo.MemberLoginForm;
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberLoginForm;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
@@ -15,20 +16,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Repository
 public class MemoryMemberRepository implements MemberRepository {
 
-    private static Map<Long, MemberSaveForm> memberStore = new ConcurrentHashMap<>();
+    private static Map<Long, Member> memberStore = new ConcurrentHashMap<>();
     private static Long sequence = 0L;
 
     @Override
-    public void save(MemberSaveForm member) {
+    public void save(Member member) {
         member.setId(++sequence);
         log.info("member = {}", member);
         memberStore.put(member.getId(), member);
     }
 
     @Override
-    public Optional<MemberLoginForm> findByEmail(MemberLoginForm member) {
+    public Optional<Member> findByEmail(String userEmail) {
         return findAll().stream()
-                .filter(m -> m.getUserEmail().equals(member.getUserEmail()))
+                .filter(m -> m.getUserEmail().equals(userEmail))
                 .findFirst();
     }
 
@@ -40,7 +41,7 @@ public class MemoryMemberRepository implements MemberRepository {
     }
 
     @Override
-    public List<MemberSaveForm> findAll() {
+    public List<Member> findAll() {
         return new ArrayList<>(memberStore.values());
     }
 }

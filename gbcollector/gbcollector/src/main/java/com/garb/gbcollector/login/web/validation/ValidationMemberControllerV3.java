@@ -1,7 +1,8 @@
 package com.garb.gbcollector.login.web.validation;
 
 import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -28,16 +29,16 @@ public class ValidationMemberControllerV3 {
     }
 
     @PostMapping("/memberInsert")
-    public String memberInsert(@Validated @ModelAttribute MemberSaveForm member, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    public String memberInsert(@Validated @ModelAttribute("member") MemberSaveForm form, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
-        if (memberService.nickNameDuplicateCheck(member.getNickName())) {
+        if (memberService.nickNameDuplicateCheck(form.getNickName())) {
             bindingResult.rejectValue("nickName", "duplicated");
         }
 
         // password와 passwordConfirm의 값이 다를 경우 검증! -> 특정 field문제가 아닌 복합 rule 검증!
-        if (member.getPassword() != null && member.getPasswordConfirm() != null) {
-            String memberPassword = member.getPassword();
-            String memberPasswordConfirm = member.getPasswordConfirm();
+        if (form.getPassword() != null && form.getPasswordConfirm() != null) {
+            String memberPassword = form.getPassword();
+            String memberPasswordConfirm = form.getPasswordConfirm();
             if (memberPassword != memberPasswordConfirm) {
                 bindingResult.reject("passwordSame");
             }
@@ -51,8 +52,8 @@ public class ValidationMemberControllerV3 {
         }
 
         // 성공 로직
+        Member member = new Member(form.getNumber(), form.getUserEmail(), form.getNickName(), form.getPassword(), form.getPasswordConfirm(), form.isPrivacyCheck(), form.isTermsCheck());
         memberService.join(member);
-
         return "redirect:/";
     }
 

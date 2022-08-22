@@ -1,18 +1,19 @@
 package com.garb.gbcollector.login.domain.memberdao;
 
-import com.garb.gbcollector.login.domain.membervo.MemberSaveForm;
+import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository {
 
-    void save(MemberSaveForm member);
+    void save(Member member);
 
-    Optional<MemberSaveForm> findByEmail(MemberSaveForm member);
+    Optional<Member> findByEmail(String userEmail);
 
     boolean findByNickName(String nickName);
 
-    List<MemberSaveForm> findAll();
+    List<Member> findAll();
 
 }
