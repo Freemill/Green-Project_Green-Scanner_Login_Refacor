@@ -1,8 +1,6 @@
 package com.garb.gbcollector.login.domain.memberdao;
 
 import com.garb.gbcollector.login.domain.membervo.Member;
-import com.garb.gbcollector.login.web.validation.form.MemberLoginForm;
-import com.garb.gbcollector.login.web.validation.form.MemberSaveForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
@@ -39,6 +37,12 @@ public class MemoryMemberRepository implements MemberRepository {
                 .filter(m -> m.getNickName().equals(nickName))
                 .findFirst().isEmpty();
     }
+
+    @Override
+    public Member findById(long id) {
+        return memberStore.get(id);
+    }
+
 
     @Override
     public List<Member> findAll() {

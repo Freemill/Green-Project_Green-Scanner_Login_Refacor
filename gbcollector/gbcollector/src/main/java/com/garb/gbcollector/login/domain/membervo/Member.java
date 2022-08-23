@@ -30,4 +30,5 @@ public class Member {
         this.privacyCheck = privacyCheck;
         this.termsCheck = termsCheck;
     }
+
 }

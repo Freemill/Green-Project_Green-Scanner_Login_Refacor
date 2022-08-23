@@ -39,7 +39,8 @@ public class ValidationMemberControllerV3 {
         if (form.getPassword() != null && form.getPasswordConfirm() != null) {
             String memberPassword = form.getPassword();
             String memberPasswordConfirm = form.getPasswordConfirm();
-            if (memberPassword != memberPasswordConfirm) {
+            if (!memberPassword.equals(memberPasswordConfirm)) {
+                log.info("memberPassword={}, memberPasswordConfirm={}", memberPassword, memberPasswordConfirm);
                 bindingResult.reject("passwordSame");
             }
         }

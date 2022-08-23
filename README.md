@@ -515,7 +515,7 @@ bindingResult.addError(new FieldError("member", "nickName", member.getNickName()
 if (member.getPassword() != null && member.getPasswordConfirm() != null) {
     String memberPassword = member.getPassword();
     String memberPasswordConfirm = member.getPasswordConfirm();
-    if (memberPassword != memberPasswordConfirm) {
+    if (!memberPassword.equals(memberPasswordConfirm)) {
         bindingResult.reject("passwordSame");
     }
 }
@@ -1949,6 +1949,358 @@ public class LoginController {
 :monkey: 로직을 작성했고 아래와 같이 잘 작동하는것을 확인할 수 있다.:monkey_face:
 
 ![image](https://user-images.githubusercontent.com/76586084/185922911-f36d2717-a2f4-4276-84cb-7d3d3748e03d.png)
+
+
+
+## Day 11
+
+---
+
+##### 로그인 처리하기 - 쿠키 사용
+
+```java
+package hello.login.domain.login;
+
+import hello.login.domain.member.Member;
+import hello.login.web.login.LoginForm;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
+
+    private final LoginService loginService;
+
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") LoginForm loginForm) {
+        return "login/loginForm";
+    }
+
+    @PostMapping("/login")
+    public String login(@Valid @ModelAttribute LoginForm form, BindingResult bindingResult, HttpServletResponse response) {
+        if (bindingResult.hasErrors()) {
+            return "login/loginForm";
+        }
+
+        Member loginMember = loginService.login(form.getLoginId(), form.getPassword());
+
+        if (loginMember == null) {
+            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "login/loginForm";
+        }
+
+        //로그인 성공 처리
+        Cookie idCookie = new Cookie("memberId", String.valueOf(loginMember.getId()));
+        response.addCookie(idCookie);
+
+        return "redirect:/";
+    }
+
+    private void expireCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+}
+
+```
+
+로그인에 성공하면 쿠키를 생성하고 ***```HttpServletResponse```*** 에 담는다. 쿠키 이름은 ***```memberNickName```*** 이고, 값은 ***```id```*** 를 담아둔다. 웹 브라우저는 종료 전까지 회원의 ***```id```*** 를 서버에 계속 보내줄 것이다.
+
+
+
+#### "실행"
+
+크롬 브라우저를 통해 HTTP 응답 헤더에 쿠기가 추가된 것을 확인 :open_mouth::exclamation:
+
+![image-20220823144537110](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220823144537110.png)
+
+
+
+***```Request Headers```***
+
+![image-20220823144750205](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220823144750205.png)
+
+들어왔다! :open_mouth::exclamation:
+
+
+
+이제 로그인 처리를 고려한 홈 화면을 만들어보자.
+
+***```HomeController```***
+
+```java
+package hello.login.web;
+
+import hello.login.domain.member.Member;
+import hello.login.domain.member.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class HomeController {
+
+    private final MemberRepository memberRepository;
+
+//    @GetMapping("/")
+    public String home() {
+        return "home";
+    }
+
+    @GetMapping("/")
+    public String home(@CookieValue(name = "memberId", required = false) Long memberId, Model model) {
+        if (memberId == null) {
+            return "home";
+        }
+
+        Member loginMember = memberRepository.findById(memberId);
+        if (loginMember == null) {
+            return "home";
+        }
+
+        model.addAttribute("member", loginMember);
+        log.info("memer={}", model);
+        return "loginHome";
+    }
+}
+```
+
+![image](https://user-images.githubusercontent.com/76586084/186150441-73379a00-3794-49ed-b90b-62adbbe2d121.png)
+
+화면에 로그인한 사용자의 ***```nickName```*** 과 ***```logout button```*** 을 표시해주었다.
+
+
+
+***```logoutbutton```*** 을 사용해 cookie를 만료시키고 로그아웃을 시켜보자
+
+***```LoginController```***
+
+```java
+package hello.login.domain.login;
+
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
+
+    private final LoginService loginService;
+
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") LoginForm loginForm) {
+        return "login/loginForm";
+    }
+
+    @PostMapping("/login")
+    public String login(@Valid @ModelAttribute LoginForm form, BindingResult bindingResult, HttpServletResponse response) {
+        if (bindingResult.hasErrors()) {
+            return "login/loginForm";
+        }
+
+        Member loginMember = loginService.login(form.getLoginId(), form.getPassword());
+
+        if (loginMember == null) {
+            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "login/loginForm";
+        }
+
+        //로그인 성공 처리
+        Cookie idCookie = new Cookie("memberId", String.valueOf(loginMember.getId()));
+        response.addCookie(idCookie);
+
+        return "redirect:/";
+    }
+
+    @PostMapping("/logout")
+    public String logout(HttpServletResponse response) {
+        expireCookie(response, "memberId");
+
+        return "redirect:/";
+    }
+
+    private void expireCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+}
+```
+
+
+
+##### 하지만 이러한 쿠키를 이용한 로그인 기능에는 보안상의 큰 문제점이 있다. 
+
+##### "보안 문제"
+
+- 쿠키 값은 임의로 변경 가능
+  - 클라이언트가 쿠키를 강제로 변경할시 다른 사용자가 됨
+  - 실제 웹 브라우저 개발자 모드에서 변경 가능
+- 쿠키에 보관된 정보는 훔쳐갈 수 있다.
+- 해커가 쿠키를 한번 훔쳐가면 평생 사용할 수 있다.
+
+
+
+##### "대안"
+
+- 쿠키에 중요한 값을 노출하지 않고, 사용자 별로 예측 불가능한 임의의 토큰(랜덤 값)을 노출하고, 서버에서 토큰과 사용자 id를 매핑해서 인식한다. 그리고 서버에서 토큰을 관리한다.
+- 토큰은 해커가 임의의 값을 넣어도 찾을 수 없도록 예상 불가능 해야 한다.
+- 해커가 토큰을 텅거다고 시간이 지나면 사용할 수 없도록 서버에서 해당 토큰의 만료시간을 짧게(30분)유지한다. 또는 해킹이 의심되는 경우 서버에서 해당 토큰을 강제로 제거하면 된다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
