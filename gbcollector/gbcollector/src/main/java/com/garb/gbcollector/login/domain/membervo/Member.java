@@ -21,6 +21,10 @@ public class Member {
 
     private boolean termsCheck;
 
+    public Member() {
+
+    }
+
     public Member(Integer number, String userEmail, String nickName, String password, String passwordConfirm, boolean privacyCheck, boolean termsCheck) {
         this.number = number;
         this.userEmail = userEmail;

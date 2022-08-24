@@ -2168,129 +2168,441 @@ public class LoginController {
 
 
 
+## Day 12
 
+---
 
+#### 로그인 처리하기 - 세션 동작 방식
 
+##### "목표"
 
+앞서 쿠키에 중요한 정보를 보관하는 방법은 여러가지 보안 이슈가 있었다. 이 문제를 해결하려면 경국 중요한 정보를 모두 서버에 저장해야 한다. 그리고 클라이언트와 서버는 추정 불가능한 임의의 식별자 값으로 연결해야 한다.
 
 
 
+##### 세션 동장 방식
 
+세션을 어떻게 개발할지 먼저 개념을 이해해보자.
 
+ ![image](https://user-images.githubusercontent.com/76586084/186357784-aaef9b75-08b3-476b-9340-a6668e5a1378.png)
 
+- 사용자가 ***```loginId```*** , ***```password```*** 정보를 전달하면 서버에서 해당 사용자가 맞는지 확인한다.
 
+##### "세션 생성"
 
+![image](https://user-images.githubusercontent.com/76586084/186358345-f9eae48f-0874-4308-876b-b68bf12a95a5.png)
 
+- 추정 불가능한 sessionId를 생성한다.
+- ***```UUID```*** 는 추정이 불가능하다.
+  - ***```Cookie : mySessionId = zz0101xx-bab9-4b92-9b32-dadb280f4b61```***
+  - 생성된 세션 ID와 세션에 보관할 값('memberA')을 서버의 세션 저장소에 보관한다.
 
 
 
+##### "세션 Id를 응답 쿠키로 전달"
 
+![image](https://user-images.githubusercontent.com/76586084/186360704-fa9ce5d9-04ca-4271-abb5-e198b2a0d98e.png)
 
+##### "클라이언트와 서버는 결국 쿠키로 연결이 되어야 한다."
 
+- 서버는 클라이언트에 ***```mySessionId```*** 라는 이름으로 세션ID만 쿠키에 담아서 전달한다.
+- 클라이언트는 쿠키 저장소에 ***```mySessinoId```*** 쿠키를 보관한다.
 
 
 
+##### "중요" :monkey::exclamation: 
 
+- 여기서 중요한 포인트는 회원과 관련된 정보는 전혀 클라이언트에 전달하지 않는다는 것이다.
+- 오직 추정 불가능한 세션 ID만 쿠리를 통해 클라이언트에 전달된다.
 
 
 
+##### "클라이언트의 세션id 쿠키 전달"
 
+![image](https://user-images.githubusercontent.com/76586084/186364018-7066bdf4-e443-41e0-b5f2-fdb8cbe081f0.png)
 
+- 클라이언트는 요청시 항상 ***```mySessionId```*** 쿠키를 전달한다.
+- 서버에서 클라이언트가 전달한 ***```mySessionId```*** 쿠키 정보를 세션 저장소를 조회해서 로그인시 보관한 세션 정보를 사용한다.
 
 
 
+##### :scream_cat: "정리" :satellite:
 
+세션을 사용해서 서버에서 중요한 정보를 관리하게 되었다. 덕분에 다음과 같은 보안 문제를 해결할 수 있다.
 
+- 쿠키 값을 변조 가능 -> 예상 불가능한 복잡한 세션 id를 사용한다.
+- 쿠키에 보관하는 정보는 클라이언트 해킹시 털릴 가능성이 있다. -> 세션 id가 털려도 여기에는 중요한 정보가 없다.
+- 쿠키 탈취 후 사용 -> 해커가 토큰을 털어가도 시간이 지나면 사용할 수 없도록 서버에서 세션 만료 시간을 짧게(30분) 또는 해킹이 의심되는 경우 서버에서 해당 세션을 강제로 제거한다.
 
 
 
+#### 로그인 처리하기 - 세션을 직접 만들어서 해보자
 
+##### 세션 3기능
 
+##### 1. 세션 생성
 
+- sessionId생성 (임의의 추정 불가능한 랜덤 값)
+- 세션 저장소에 sessionId와 보관할 값 저장
 
+##### 2. 세션 조회
 
+- 클라이언트가 요청한 sessionId 쿠키의 값으로, 세션 저장소에 보관한 값 조회
 
+##### 3. 세션 만료
 
+- 클라이언트가 요청한 sessionId 쿠키의 값으로, 세션 저장소에 보관한 sessionid 값 제거
 
 
 
+***```SessionManager```***
 
+```java
+/**
+ * 세션 관리
+ */
+@Component
+public class SessionManager {
 
+    public static final String SESSION_COOKIE_NAME = "mySessionId";
+    private Map<String, Object> sessionStore = new ConcurrentHashMap<>();
 
+    /**
+     * 세션 생성
+     *  * sessionId 생성 (임의의 추정 불가능한 랜덤 값)
+     *  * session 저장소에 sessionId와 보관할 값 저장
+     *  * sessionId로 응답 쿠키를 생성해서 클라이언트에 전달
+     */
+    public void createSession(Object value, HttpServletResponse response) {
+
+        //세션 id를 생성하고, 값을 세션에 저장
+        String sessionId = UUID.randomUUID().toString();
+        sessionStore.put(sessionId, value);
+
+        //쿠키 생성
+        Cookie mySessionCookie = new Cookie(SESSION_COOKIE_NAME, sessionId);
+        response.addCookie(mySessionCookie);
+    }
+
+    /**
+     * 세션 조회
+     */
+    public Object getSession(HttpServletRequest request) {
+        Cookie sessionCookie = findCookie(request, SESSION_COOKIE_NAME);
+        if (sessionCookie == null) {
+            return null;
+        }
+        return sessionStore.get(sessionCookie.getValue());
+    }
+
+    /**
+     * 세션 만료
+     */
+    public void expire(HttpServletRequest request) {
+        Cookie sessionCookie = findCookie(request, SESSION_COOKIE_NAME);
+        if (sessionCookie != null) {
+            sessionStore.remove(sessionCookie.getValue());
+        }
+    }
+
+    public Cookie findCookie(HttpServletRequest request, String cookieName) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(cookieName))
+                .findAny()
+                .orElse(null);
+    }
+}
+```
+
+
+
+테스트 코드를 작성해보았다.
+
+```java
+public class SessionManagerTest {
+
+    SessionManager sessionManager = new SessionManager();
+
+    @Test
+    void sessionTest() {
+
+        //세션 생성
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        Member member = new Member();
+        sessionManager.createSession(member, response);
+
+        //요청에 응답 쿠키 저장
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(response.getCookies());
+
+        //세션 조회
+        Object result = sessionManager.getSession(request);
+        Assertions.assertThat(result).isEqualTo(member);
+
+        //세션 만료
+        sessionManager.expire(request);
+        Object expired = sessionManager.getSession(request);
+        Assertions.assertThat(expired).isNull();
+    }
+}
+```
 
 
 
+만들어진 ***```SessionManager```*** 를 통해 ***```LoginController```*** 와 ***```HomeController```*** 를 Refactoring해보자
 
+***```LoginController```***
 
+```java
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
 
+    private final LoginService loginService;
+    private final SessionManager sessionManager;
 
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") MemberLoginForm form) {
+        return "html/login";
+    }
 
+    ;
 
+    @PostMapping("/login")
+    public String loginV2(@Valid @ModelAttribute("loginForm") MemberLoginForm form, BindingResult bindingResult, HttpServletResponse response) {
+        if (bindingResult.hasErrors()) {
+            return "html/login";
+        }
 
+        Member loginMember = loginService.login(form.getUserEmail(), form.getPassword());
 
+        if (loginMember == null) {
+            log.info("errors = {}", bindingResult);
+            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "html/login";
+        }
 
+        //로그인 성공 처리
 
+        //세션 관리자를 통해 세션을 생성하고, 화면 데이터 보관
+        sessionManager.createSession(loginMember, response);
+        return "redirect:/";
+    }
 
+    @PostMapping("/logout")
+    public String logoutV2(HttpServletRequest request) {
+        sessionManager.expire(request);
 
+        return "redirect:/";
+    }
 
+    private void expireCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+}
+```
 
 
 
+***```HomeController```***
 
+```
+@Controller
+@Slf4j
+@RequiredArgsConstructor
+public class HomeController {
 
+    private final MemberServiceImpl memberService;
+    private final SessionManager sessionManager;
 
+    //@GetMapping("/")
+    public String IndexPage(Model model) {
+        log.info("Index Page");
+        return "index";
+    }
 
 
+    @GetMapping("/")
+    public String homeLoginV2(HttpServletRequest request, Model model) {
 
+        //세션 관리자에 저장된 정보를 조회회
+        Member member = (Member) sessionManager.getSession(request);
+        //로그인
+        if (member == null) {
+            return "index";
+        }
 
+        model.addAttribute("member", member);
+        log.info("model = {}", model);
+        return "homeIndex";
+    }
 
+    }
+```
+
+
 
 
+
+### 로그인 처리하기 - 서블릿 HTTP 세션1
 
+이제 서블릿이 제공하는 ***```HttpSession```*** 을 활용해 ***```SessionManager```*** 을 구현해 보자 (기본적인 로직은 동일하다.)
+서블릿을 통해 ***```HttpSession```*** 을 생성하면 다음과 같은 쿠키를 생성한다. 쿠키 이름이 ***```JESSIONID```*** 이고, 값은 추정 불가능한 랜덤 값이다.
 
+***```Cookie: JESSIONID=58E9869SDFS986987,,,```***
 
+***```LoginController```***
 
+```java
+@Slf4j
+@Controller
+@RequiredArgsConstructor
+public class LoginController {
 
+    private final LoginService loginService;
+    private final SessionManager sessionManager;
 
+    @GetMapping("/login")
+    public String loginForm(@ModelAttribute("loginForm") MemberLoginForm form) {
+        return "html/login";
+    }
 
+    @PostMapping("/login")
+    public String loginV3(@Valid @ModelAttribute("loginForm") MemberLoginForm form, BindingResult bindingResult, HttpServletRequest request) {
+        if (bindingResult.hasErrors()) {
+            return "html/login";
+        }
 
+        Member loginMember = loginService.login(form.getUserEmail(), form.getPassword());
 
+        if (loginMember == null) {
+            log.info("errors = {}", bindingResult);
+            bindingResult.reject("loginFail", "아이디 또는 비밀번호가 맞지 않습니다.");
+            return "html/login";
+        }
 
+        //로그인 성공 처리
+        //세션이 있으면 있는 세션 반환, 없으면 신규 세션을 생성
+        HttpSession session = request.getSession();
+        //세션에 로그인 회원 정보 관리
+        session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
 
+        return "redirect:/";
+    }
 
 
+    @PostMapping("/logout")
+    public String logoutV3(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return "redirect:/";
+    }
 
+    private void expireCookie(HttpServletResponse response, String cookieName) {
+        Cookie cookie = new Cookie(cookieName, null);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
+}
+```
 
+***```HomeContoller```***
 
+```java
+@Controller
+@Slf4j
+@RequiredArgsConstructor
+public class HomeController {
 
+    private final MemberServiceImpl memberService;
+    private final SessionManager sessionManager;
 
+    @GetMapping("/")
+    public String homeLoginV3(HttpServletRequest request, Model model) {
 
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return "index";
+        }
+        
+        Member loginMember = (Member) session.getAttribute(SessionConst.LOGIN_MEMBER);
 
 
+        //세션에 회원 데이터가 없으면 home
+        if (loginMember == null) {
+            return "index";
+        }
 
+        //세션이 유지되면 로그인으로 이동
+        model.addAttribute("member", loginMember);
+        log.info("model = {}", model);
+        return "homeIndex";
+    }
 
+    }
+    }
+```
 
 
 
+여기서 한발자국 더 나가 ***```@SessionAttribute```*** 를 이용해 보자
 
+***```HomeController```***
 
+```java
+@Controller
+@Slf4j
+@RequiredArgsConstructor
+public class HomeController {
 
+    private final MemberServiceImpl memberService;
+    private final SessionManager sessionManager;
 
 
+    @GetMapping("/")
+    public String homeLoginV3Spring(@SessionAttribute(name = SessionConst.LOGIN_MEMBER, required = false) Member loginMember, Model model) {
 
 
+        //세션에 회원 데이터가 없으면 home
+        if (loginMember == null) {
+            return "index";
+        }
 
+        //세션이 유지되면 로그인으로 이동
+        model.addAttribute("member", loginMember);
+        log.info("model = {}", model);
+        return "homeIndex";
+    }
+    }
+```
 
 
 
+그런데 처음 로그인을 하면
 
+![image](https://user-images.githubusercontent.com/76586084/186408965-1cd6804b-f477-4bcd-85a4-870753e8618c.png)
 
+이렇게 jsessionId가 들어가고 response에도 setCookie가 들어감
 
+이것은 웹 브라우저가 쿠키를 지원하지 않을 때 쿠키 대신 URL을 통해서 세션을 유지하는 방법이다. 이 방법을 사용하려면 URL에 같은 값을 계속 전달해야 한다. (이 방법을 사용하길 원치 않음)
 
 
 
+application.properties에 
 
+```
+server.servlet.session.tracking-modes==cookie
+```
 
+를 추가한다.
 
 
 
@@ -2316,3 +2628,76 @@ public class LoginController {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
