@@ -34,7 +34,7 @@
 						<div class="dropdown-submenu">
 							<a href="/html/SWV.html">음성으로배출방법찾기</a>
 							<a onclick='alert("준비 중인 서비스입니다.")'>사진으로배출방법찾기</a>
-							<a href="/html/trashCanMap.html">주변쓰레기통찾기</a>
+							<a th:href="@{trashCanMap}">주변쓰레기통찾기</a>
 							<a href="/html/zeroWasteShopMap.html">제로웨이스트상점찾기</a>
 							<a href="/challenge/main">챌린지</a>
 							<a href="/board/boardlist">게시판</a>
@@ -53,7 +53,7 @@
 			<div class="main-icons-link">
 				<a href="/html/SWV.html"><img th:src="@{/img/mainmic.png}"></a>
 				<a onclick='alert("준비 중인 서비스입니다.")'><img th:src="@{/img/mainpicture.png}"></a>
-				<a href='/html/trashCanMap.html'><img th:src="@{/img/maingarbage.png}"></a>
+				<a th:href="@{trashCanMap}"><img th:src="@{/img/maingarbage.png}"></a>
 				<a href='/html/zeroWasteShopMap.html'><img th:src="@{/img/mainzero.png}"></a>
 				<a href='/challenge/main'><img th:src="@{/img/mainchallenge.png}"></a>
 				<a href="/board/boardlist"><img th:src="@{/img/mainboard.png}"></a>

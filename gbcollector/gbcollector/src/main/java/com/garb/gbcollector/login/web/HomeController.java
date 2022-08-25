@@ -30,6 +30,14 @@ public class HomeController {
         return "index";
     }
 
+    @GetMapping("/trashCanMap")
+    public String trashCanMap(Model model) {
+        log.info("왔어?");
+        return "html/trashCanMap";
+    }
+
+
+
 //    @GetMapping("/")
 //    public String homeLogin(@CookieValue(name = "memberId", required = false) Long memberId, Model model) {
 //
