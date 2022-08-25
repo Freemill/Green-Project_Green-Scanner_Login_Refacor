@@ -98,7 +98,7 @@ public class LoginController {
         //세션에 로그인 회원 정보 관리
         session.setAttribute(SessionConst.LOGIN_MEMBER, loginMember);
 
-        return "homeIndex";
+        return "redirect:/";
     }
 
 //    @PostMapping("/logout")

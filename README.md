@@ -2412,7 +2412,7 @@ public class LoginController {
 
 ***```HomeController```***
 
-```
+```java
 @Controller
 @Slf4j
 @RequiredArgsConstructor
@@ -2606,11 +2606,99 @@ server.servlet.session.tracking-modes==cookie
 
 
 
+#### 세션 정보와 타임아웃 설정
+
+##### 세션 정보 확인
+
+세션이 제공하는 정보들을 확인해보자.
+
+***```SessionController```***
+
+```java
+package com.garb.gbcollector.login.web.session;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.Date;
+
+@Slf4j
+@RestController
+public class SessionInfoController {
+
+    @GetMapping("/session-info")
+    public String sessionInfo(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return "세션이 없습니다.";
+        }
+
+        //세션 데이터 출력
+        session.getAttributeNames().asIterator()
+                .forEachRemaining(name -> log.info("session name = {}, value={}", name, session.getAttribute(name)));
+
+        log.info("sessionId = {}", session.getId());
+        log.info("getMaxInactiveInterval = {}", session.getMaxInactiveInterval());
+        log.info("creationTime = {}", new Date(session.getCreationTime()));
+        log.info("lastAccessedTime={}", new Date(session.getLastAccessedTime()));
+        log.info("isNew={}", session.isNew());
+
+        return "세션 출력";
+
+    }
+}
+```
+
+***```log```***
+
+```
+2022-08-25 16:12:03.065  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : session name = loginMember, value=Member(id=1, number=1, userEmail=gildong@naver.com, nickName=gildong, password=killdong, passwordConfirm=killdong, privacyCheck=true, termsCheck=true)
+2022-08-25 16:12:03.066  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : sessionId = 19484C49681BD57B2035EAB10D9264A0
+2022-08-25 16:12:03.066  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : getMaxInactiveInterval = 1800
+2022-08-25 16:12:03.066  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : creationTime = Thu Aug 25 15:48:52 KST 2022
+2022-08-25 16:12:03.067  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : lastAccessedTime=Thu Aug 25 15:48:54 KST 2022
+2022-08-25 16:12:03.067  INFO 19780 --- [nio-8080-exec-2] c.g.g.l.w.session.SessionInfoController  : isNew=false
+
+```
+
+세션 정보를 확인할 수 있다.
 
 
 
+##### 세션 타임아웃 설정
+
+세션은 사용자가 로그아웃을 직접 호출해서 ***```session.invalidate()```*** 가 호출 되는 경우에 삭제된다. 그런데 대부분의 사용자는 로그아웃을 선택하지 않고, 그냥 웹 브라우저를 종료한다. 문제는 HTTP가 비 연결성(ConnentionLess)이므로 서버 입장에서는 해당 사용자가 웹 브라우저를 종료한 것인지 아닌지를 인식할 수 없다. 따라서 서버에서 세션 데이터를 언제 삭제해야 하는지 판단하기가 어렵다.
+
+이 경우 남아있는 세션을 무한정 보관하면 다음과 같은 문제가 발생할 수 있다.
+
+:point_right: 세견과 관련된 쿠키를 탈취 당했을 경우 오랜 시간이 지나도 해당 쿠키로 악의적인 요청을 할 수 있다.
+
+:point_right: 세견은 기본적으로 메모리에 생성된다. 메모리의 크기가 무한하지 않기 때문에 꼭 필요한 경우만 생성해서 사용해야 한다. 10만명의 		사용자가 로그인하면 10만개의 세션이 생성되는 것이다.
+
+##### "세션의 종료 시점"
+
+세션의 종료 시점을 사용자가 서버에 최근에 요청한 시간을 기준으로 30분 정도를 유지해 주는것이 좋다.
 
 
+
+##### "세션 타임아웃 설정"
+
+스프링 부트로 글로벌 설정
+
+***```application.properties```***
+
+***```server.servlet.session.timeout=60```*** 60초, 기본은 1800(30분)
+
+(글로벌 설정은 분 단위로 설정해야 한다. 60(1분))
+
+
+
+##### "정리"
+
+서블릿의 ***```HttpSession```*** 이 제공하는 타임아웃 기능 덕분에 세션을 안전하고 편리하게 사용할 수 있다. 실무에서 주의할 점은 세션에는 최소한의 데이터만 보관해야 한다는 점이다. 보관한 데이터 용량 * 사용자 수로 세션의 메모리 사용량이 급격하게 늘어나서 장애로 이어질 수 있다. 추가로 세션의 시간을 너무 길게 가져가면 ㅁ모르 사용이 계속 누적 될 수 있으므로 적당한 시간을 선택하는 것이 필요하다. 기준이 30분이라는 것을 기준으로 고민하면 된다.
 
 
 
