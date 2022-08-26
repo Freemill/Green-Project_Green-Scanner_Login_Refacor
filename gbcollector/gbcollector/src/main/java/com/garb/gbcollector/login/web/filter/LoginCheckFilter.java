@@ -14,6 +14,7 @@ import java.io.IOException;
 public class LoginCheckFilter implements Filter {
 
     private static final String[] whiteList = {"/", "/memberInsertForm", "/login", "/logout", "/css/*", "/img/*", "/fonts/*"};
+    private static final String[] fontsList = {"/fonts/*"};
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -26,14 +27,16 @@ public class LoginCheckFilter implements Filter {
             log.info("인증 체크 필터 시작 {}", requestURI);
 
             if (isLoginCheckPath(requestURI)) {
-                log.info("인증 체크 로직 실행 {}", requestURI);
-                HttpSession session = httpRequest.getSession(false);
-                if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
-                    log.info("미인증 사용자 요청 {}", requestURI);
+                if (isFontsCheckPath(requestURI)){
+                    log.info("인증 체크 로직 실행 {}", requestURI);
+                    HttpSession session = httpRequest.getSession(false);
+                    if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+                        log.info("미인증 사용자 요청 {}", requestURI);
 
-                    //로그인 성공시 다시 페이지로 돌아오기 위해
-                    httpResponse.sendRedirect("/login?redirectURL="+ requestURI);
-                    return;
+                        //로그인 성공시 다시 페이지로 돌아오기 위해
+                        httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
+                        return;
+                    }
                 }
             }
 
@@ -52,6 +55,10 @@ public class LoginCheckFilter implements Filter {
     }
     private boolean isLoginCheckPath(String requestURI){
         return !PatternMatchUtils.simpleMatch(whiteList, requestURI);
+    }
+
+    private boolean isFontsCheckPath(String requestURI){
+        return !PatternMatchUtils.simpleMatch(fontsList, requestURI);
     }
 
 }

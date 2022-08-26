@@ -2710,7 +2710,7 @@ public class SessionInfoController {
 
 ---
 
-#### 로그인 처리2 - 필터, 인터셉터
+#### 로그인 처리2 - 필터
 
 ##### 서블릿 필터 - 소개
 
@@ -2851,13 +2851,13 @@ public class WebConfig {
 
 그리고 실행을 해주면!
 
-![image-20220825185036610](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220825185036610.png)
+![image](https://user-images.githubusercontent.com/76586084/186898670-0ecb7b9a-9a95-4fd4-b8c7-566cdc74ab83.png)
 
 ***"log filter init"*** 메시지를 확인 할 수 있다.
 
 그리고 이제 web을 새로고침 하면
 
-![image-20220825185229565](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20220825185229565.png)
+![image](https://user-images.githubusercontent.com/76586084/186898696-459cf8a1-7068-4e9e-a519-635daaf8e53a.png)
 
 요롷게 logFilter가 잘 작동하는 것을 확인할 수 있다.
 
@@ -2920,6 +2920,7 @@ public class WebConfig {
 public class LoginCheckFilter implements Filter {
 
     private static final String[] whiteList = {"/", "/memberInsertForm", "/login", "/logout", "/css/*", "/img/*", "/fonts/*"};
+    private static final String[] fontsList = {"/fonts/*"};
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -2932,14 +2933,16 @@ public class LoginCheckFilter implements Filter {
             log.info("인증 체크 필터 시작 {}", requestURI);
 
             if (isLoginCheckPath(requestURI)) {
-                log.info("인증 체크 로직 실행 {}", requestURI);
-                HttpSession session = httpRequest.getSession(false);
-                if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
-                    log.info("미인증 사용자 요청 {}", requestURI);
+                if (isFontsCheckPath(requestURI)){
+                    log.info("인증 체크 로직 실행 {}", requestURI);
+                    HttpSession session = httpRequest.getSession(false);
+                    if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+                        log.info("미인증 사용자 요청 {}", requestURI);
 
-                    //로그인 성공시 다시 페이지로 돌아오기 위해
-                    httpResponse.sendRedirect("/login?redirectURL="+ requestURI);
-                    return;
+                        //로그인 성공시 다시 페이지로 돌아오기 위해
+                        httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
+                        return;
+                    }
                 }
             }
 
@@ -2960,9 +2963,16 @@ public class LoginCheckFilter implements Filter {
         return !PatternMatchUtils.simpleMatch(whiteList, requestURI);
     }
 
-}
+    private boolean isFontsCheckPath(String requestURI){
+        return !PatternMatchUtils.simpleMatch(fontsList, requestURI);
+    }
 
+}
 ```
+
+try안에 들어와서도 fonts/에 관한 요청은 제외함으로써 의도한 로직을 성공적으로 수행함.
+
+
 
 ***```WebConfig```***
 
@@ -3054,27 +3064,126 @@ public class LoginController {
 
 
 
+## Day 14
+
+---
+
+#### 로그인 처리2 - 스프링 인터셉터
+
+스프링 인터셉터도 서블릿 필터와 같이 웹과 관련된 공통 관심 사항을 효과적으로 해결할 수 있는 기술이다.
+서블릿 필터가 서블릿이 제공하는 기술이라면, 스프링 인터셉터는 스프링 MVC가 제공하는 기술이다. 둘다 웹과 관련된 공통 관심 사항을 처리하지만, 적용되는 순서와 범위, 그리고 사용방법이 다르다.
+
+##### "스프링 인터셉터"
+
+---
+
+#### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```***:arrow_forward: ***```서블릿```*** :arrow_forward: ***```스프링 인터셉터```*** :arrow_forward: ***```컨트롤러```***
+
+---
+
+:cow2: 스프링 인터셉터는 디스패처 스블릿과 컨트롤러 사이에서 컨트롤러 호출 직전에 호출된다.
+
+:elephant: 프링 인터셉터는 스프링 MVC가 제공하는 기능이기 때문에 결국 디스패처 서블릿 이후에 등장하게 된다. 스프링 MVC의 시작점이 		디스패처 서블릿이라고 생각해보면 이해가 될 것이다.
+
+:rhinoceros: 스프링 인터셉터에도 URL 패턴을 적용할 수 있는데, 서블릿 URL 패턴과는 다르고, 매우 정밀하게 설정할 수 있다.
+
+
+
+##### "스프링 인터셉터 제한"
+
+---
+
+#### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```*** :arrow_forward: ***```서블릿```*** :arrow_forward: ***```스프링 인터셉터```*** :arrow_forward: ***```컨트롤러```*** // ***```로그인 사용자```***
+
+#### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```*** :arrow_forward: ***```서블릿```*** :arrow_forward: ***```스프링 인터셉터(적절하지 않은 요청이라 판단, 컨트롤러 호출 X)```*** // ***```비로그인 사용자```***
+
+---
+
+인터셉터에서 적절하지 않은 요청이라고 판단하면 거기에서 끝을 낼 수도 있다. 그래서 로그인 여부를 체크하기에 딱 좋다!
+
+
+
+##### "스프링 인터셉터 체인"
+
+---
+
+#### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```***:arrow_forward: ***```서블릿```*** :arrow_forward:  ***```인터셉터1```***:arrow_forward:  ***```인터셉터2```***  :arrow_forward: ***```컨트롤러```*** 
+
+---
+
+스프링 인터셉터는 체인으로 구성되는데, 중간에 인터셉터를 자유롭게 추가할 수 있다. 예를 들어서 로그를 남기는 인터벳터를 먼저 적용하고, 그 다음에 로그인 여부를 체크하는 인터셉터를 만들 수 있다.
+
+
+
+##### "스프링 인터셉터 인터페이스"
+
+스프링의 인터셉터를 적요하려면 ***```HandlerInterceptor```*** 인터페이스를 구현하면 된다.
+
+```java
+public interface HandlerInterceptor{
+    
+    default boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+                             Object handler) throws Exception{}
+    
+    default void postHandle(HttpServletRequest request, HttpServletResponse response,
+                           Object handler, @Nullable ModelAndView modelAndView) throws Exception {}
+    
+    default void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, @Nullable Exception ex) throws Exception {}
+}
+```
+
+:eagle: 서블릿 필터의 경우 단순하게 ***```doFilter()```*** 하나만 제공한다. 인터셉터는 컨트롤러 호출 전 ***```(preHandler)```***, 호출 후 ***```(postHandle)```*** 
+
+​		, 요청 완료 이후 ***```(afterCompletion)```*** 와 같이 단계적으로 잘 세분화 되어 있다.
+
+:dragon: 서블릿 필터의 경우 단순히 ***```request```*** , ***```response```*** 만 제공하지만, 인터셉터는 어떤 컨트롤러 ***```(handler)```*** 가 호출되는지 호출 정보도 
+
+​		받을 수 있다. 그리고 어떤 ***```modelAndView```*** 가 반환되는지 응답 정보도 받을 수 있다.
+
+
+
+##### "스프링 인터셉터 호출 흐름"
+
+![image](https://user-images.githubusercontent.com/76586084/186909517-1376ef16-6852-4d51-92ea-069289718b51.png)
+
+
+
+##### "정상 흐름"
+
+- ***```preHandle```*** : 컨트롤러 호출 전에 호출된다. (더 정확히는 핸들러 어탭터 호출 전에 호출된다.)
+  - ***```preHandle```*** 의 응답값이 ***```true```*** 이면 다음으로 진행하고, ***```false```*** 이면 더는 진행하지 않는다. ***```false```*** 인 경우 나머지 인터셉터는 물론이고, 핸들러 어탭터도 호출되지 않는다. 그림에서 1.에서 끝나버린다.
+- ***```postHandle```*** : 컨트롤러 호출 후에 호출된다. (더 정확히는 핸들러 어탭터 호출 후에 호출된다.)
+- ***```afterCompletion```*** : 뷰가 랜더링 된 이후에 호출된다.
+
+
+
+##### "스프링 인터셉터 예외 상황"
+
+![image](https://user-images.githubusercontent.com/76586084/186913642-4d0ae539-152f-4c6d-9cb8-f9a4ddfe41b6.png)
+
+##### "예외가 발생시"
+
+- ***```preHandle```*** : 컨트롤러 호출 전에 호출된다.
+- ***```postHandle```*** : 컨트롤러에서 예외가 발생하면 ***```postHandle```*** 은 호출되지 않는다.
+- ***```afterCompletion```*** : ***```afterCompletion```*** 은 항상 호출된다. 이 경우 예외를 파라미터로 받아서 어떤 예외가 발생했는지 로그로 출력       할 수도 있다.
+
+
+
+##### "afterCompletion은 예외가 발생해도 호출된다."
+
+- 예외가 발생하면 ***```postHandle()```*** 는 호출되지 않으므로 예외와 무관하게 공통 처리를 하려면 ***```afterCompletion()```*** 을 사용해야 한다.
+- 예외가 발생하면 ***```adterCompletion()```*** 에 예외 정보를 포함해서 호출된다.
 
 
 
 
 
+#### 스프링 인터셉터 - 요청 로그
 
+##### "LoginInerceptor - 요청 로그 인터셉터"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#####  
 
 
 
