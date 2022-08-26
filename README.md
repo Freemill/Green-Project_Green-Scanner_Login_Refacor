@@ -3145,7 +3145,7 @@ public interface HandlerInterceptor{
 
 ##### "스프링 인터셉터 호출 흐름"
 
-![image](https://user-images.githubusercontent.com/76586084/186909517-1376ef16-6852-4d51-92ea-069289718b51.png)
+![image](https://user-images.githubusercontent.com/76586084/186917722-676886d4-af6b-4af8-bcd4-d9120995fc4e.png)
 
 
 
