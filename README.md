@@ -3179,33 +3179,243 @@ public interface HandlerInterceptor{
 
 
 
+## Day 15
+
+---
+
 #### 스프링 인터셉터 - 요청 로그
 
 ##### "LoginInerceptor - 요청 로그 인터셉터"
 
-#####  
+```java
+@Slf4j
+public class LogInterceptor implements HandlerInterceptor {
+
+    public static final String LOG_ID = "logId";
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
+        String logId = UUID.randomUUID().toString();
+
+        request.setAttribute(LOG_ID, logId);
+
+        //@RequestMapping : HandlerMethod
+        //정적적 리소스 : ResourceHttpRequestHandler
+
+        if (handler instanceof HandlerMethod) {
+            HandlerMethod hm = (HandlerMethod) handler; //호출할 컨트롤러 메서드의 모든 정보과 포함되어있다.
+
+        }
+        log.info("REQUEST [{}][{}][{}]", logId, requestURI, handler);
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        log.info("postHandle [{}]", modelAndView);
+
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        String requestURI = request.getRequestURI();
+        Object logId = (String) request.getAttribute(LOG_ID);
+
+        log.info("RESPONSE [{}][{}][{}]", logId, requestURI, handler);
+
+        if (ex != null) {
+            log.error("afterCompletion error!", ex);
+        }
+
+    }
+}
+```
+
+- ***```String uuid = UUID.randomUUID().toString()```***
+  - 요청 로그를 구분하기 위한 ***```uuid```*** 를 생성한다.
+- ***```request.setAttribute(LOG_ID, uuid)```***
+  - 서블릿 필터의 경우 지역변수로 해결이 가능하지만, 스프링 인터셉터는 호출 시점이 완전히 분리되어 있다. 따라서 ***```preHandle```*** 에서 지정한 값을 ***```postHandle```*** , ***```afterCompletion```*** 에서 함께 사용하려면 어딘가에 담아두어야 한다. ***```LogInterceptor```*** 도 싱글톤 처럼 사용되기 때문에 멤버변수를 사용하면 위험하다. 따라서 ***```request```*** 에 담아두었다. 이 값은 ***```afterCompletion```*** 에서 ***```request.getAttribute(LOG_ID)```*** 로 찾아서 사용한다.
+- ***```return true```***
+  - ***```true```*** 면 정상 호출이다. 다음 인터셉터나 컨트롤러가 호출된다.
+
+```java
+if (handler instanceof HandlerMethod) {
+    HandlerMethod hm = (HandlerMethod) handler; //호출할 컨트롤러 메서드의 모든 정보과 포함되어있다.
+
+}
+```
+
+***```"HandlerMethod"```***
+
+핸들러 정보는 어떤 핸들러 매핑을 사용하는가에 따라 달라진다. 스프링을 사용하면 일반적으로 ***```'@Controller'```*** , ***```'@RequestMapping'```*** 을 활용한 매핑을 사용하느데, 이 경우 핸들러 정보로 ***```HandlerMethod```*** 가 넘어온다.
 
 
 
+***```"ResourceHttpRequestHandler"```***
+
+***```'@Controller'```*** 가 아니라 ***```'/resources/static'```*** 와 같은  정적 리소스가 호출 되는 경우 ***```'ResourceHttpRequestHandler'```*** 가 핸들러 정보로 넘어오기 때문에 타입에 따라서 처리가 필요하다.
 
 
 
+***```"postHandler, afterCompletion"```***
+
+종료 로그를 ***```'postHandle'```*** 이 아니라 ***```'afterCompletion'```*** 에서 실행한 이유는, 예외가 발생한 경우 ***```'postHandle'```*** 가 호출되지 않기 때문이다. ***```'afterCompletion'```*** 은 예외가 발생해도 호출 되늣 것을 보장한다.
 
 
 
+##### "WebConfig - 인터셉터 등록"
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor())
+                .order(1)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/css/**", "/*.ico", "/error", "/fonts/**", "/img/**");
+    }
+    
+  }
+}
+```
 
 
 
+##### "LoginCheckInterceptor"
+
+```java
+@Slf4j
+public class LoginCheckInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
+        log.info("인증 체크 인터셉터 실행 {}", requestURI);
+
+        HttpSession session = request.getSession();
+
+        if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+            log.info("미인증 사용자 요철");
+            response.sendRedirect("/login?redirectURL=" + requestURI);
+            return false;
+        }
+
+        return true;
+    }
+}
+```
 
 
 
+##### "WebConfig"
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor())
+                .order(1)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/css/**", "/*.ico", "/error", "/fonts/**", "/img/**");
+
+        registry.addInterceptor(new LoginCheckInterceptor())
+                .order(2)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/css/**", "/*.ico", "/error", "/fonts/**", "/img/**", "/", "/memberInsertForm", "/login", "/logout");
+    }
+}
+```
 
 
 
+##### "정리"
+
+서블릿 필터와 스프링 인터셉턴은 웹과 관련된 공통 관심사를 해결하기 위한 기술이다.
+
+서블릿 필터와 비교해서 스프링 인터셉터가 개발자 입장에서 훨씬 편리하다는것을 코드로 이해했을 것이다. 특별한 문제가 없다면 인터셉터를 사용하는 것이 좋다.
 
 
 
+#### "ArgumentResolver 활용"
 
+##### "HomeController - 추가"
+
+```java
+@GetMappint("/")
+public String homeLoginV3ArgumentResolver(@Login Member loginMember, Model model){
+    
+    if (loginMember == null){
+        return "index";
+    }
+    
+    model.addAttribute("member", loginMember);
+    return "homeIndex";
+}
+```
+
+
+
+##### "@Login 애노테이션 생성"
+
+```java
+package com.garb.gbcollector.login.web.argumentresolver;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Login {
+}
+```
+
+- ***```@Target(ElementType.PARAMETER) ```*** : 파라미터에만 사용
+- ***```@Retention(RetentionPolicy.RUNTIME)```***  : 리플렉션 등을 활용할 수 있도록 런타임까지 애노테이션 정보가 남아있음
+
+
+
+##### "LoginMemberArgumentResolver 생성"
+
+```java
+@Slf4j
+public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolver {
+
+    @Override
+    public boolean supportsParameter(MethodParameter parameter) {
+        log.info("supportsParameter 실행");
+
+        boolean hasLoginAnnotation = parameter.hasParameterAnnotation(Login.class);
+        boolean hasMemberType = Member.class.isAssignableFrom(parameter.getParameterType());
+
+        return hasLoginAnnotation && hasMemberType;
+    }
+
+    @Override
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+        log.info("resolverArgument 실행");
+
+        HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return null;
+        }
+
+
+
+        return session.getAttribute(SessionConst.LOGIN_MEMBER);
+    }
+}
+```
+
+- ***```supprotsParameter()```*** : ***```@Login```*** 애노테이션이 있으면서 ***```Member```*** 타입이면 해당 ***```ArgumentResolver```*** 가 사용된다.
+- ***```resolverArgument()```*** : 컨트롤러 호출 직전에 호출 되어서 필요한 파라미터 정보를 생성해준다. 여기에서 세션에 있는 로기인 회원 정보인 ***```member```*** 객체를 찾아서 반환해준다. 이후 스프링MVC는 컨트롤러의 메서드를 호출하면서 여기에서 반환된 ***```member```*** 객체를 파라미터에 전달해준다.
 
 
 

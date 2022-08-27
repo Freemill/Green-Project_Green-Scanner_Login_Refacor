@@ -30,7 +30,6 @@ public class LoginController {
 
     @GetMapping("/login")
     public String loginForm(@ModelAttribute("loginForm") MemberLoginForm form) {
-        log.info("왔니?");
         return "html/login";
     }
 

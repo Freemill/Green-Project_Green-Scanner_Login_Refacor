@@ -2,6 +2,7 @@ package com.garb.gbcollector.login.web;
 
 import com.garb.gbcollector.login.domain.memberservice.MemberServiceImpl;
 import com.garb.gbcollector.login.domain.membervo.Member;
+import com.garb.gbcollector.login.web.argumentresolver.Login;
 import com.garb.gbcollector.login.web.session.SessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -94,8 +95,23 @@ public class HomeController {
 //        return "homeIndex";
 //    }
 
+//    @GetMapping("/")
+//    public String homeLoginV3Spring(@SessionAttribute(name = SessionConst.LOGIN_MEMBER, required = false) Member loginMember, Model model) {
+//
+//
+//        //세션에 회원 데이터가 없으면 home
+//        if (loginMember == null) {
+//            return "index";
+//        }
+//
+//        //세션이 유지되면 로그인으로 이동
+//        model.addAttribute("member", loginMember);
+//        log.info("model = {}", model);
+//        return "homeIndex";
+//    }
+
     @GetMapping("/")
-    public String homeLoginV3Spring(@SessionAttribute(name = SessionConst.LOGIN_MEMBER, required = false) Member loginMember, Model model) {
+    public String homeLoginV3ArgumentResolver(@Login Member loginMember, Model model) {
 
 
         //세션에 회원 데이터가 없으면 home

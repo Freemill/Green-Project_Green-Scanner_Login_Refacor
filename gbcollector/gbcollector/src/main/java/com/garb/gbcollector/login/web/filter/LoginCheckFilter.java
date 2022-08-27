@@ -22,12 +22,12 @@ public class LoginCheckFilter implements Filter {
         String requestURI = httpRequest.getRequestURI();
 
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+        if (isFontsCheckPath(requestURI)) {
+            try {
+                log.info("인증 체크 필터 시작 {}", requestURI);
 
-        try{
-            log.info("인증 체크 필터 시작 {}", requestURI);
+                if (isLoginCheckPath(requestURI)) {
 
-            if (isLoginCheckPath(requestURI)) {
-                if (isFontsCheckPath(requestURI)){
                     log.info("인증 체크 로직 실행 {}", requestURI);
                     HttpSession session = httpRequest.getSession(false);
                     if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
@@ -36,15 +36,16 @@ public class LoginCheckFilter implements Filter {
                         //로그인 성공시 다시 페이지로 돌아오기 위해
                         httpResponse.sendRedirect("/login?redirectURL=" + requestURI);
                         return;
+
                     }
                 }
-            }
 
-            chain.doFilter(request, response);
-        } catch (Exception e){
-            throw e;
-        }finally{
-            log.info("인증 체크 필터 종료 {}", requestURI);
+                chain.doFilter(request, response);
+            } catch (Exception e) {
+                throw e;
+            } finally {
+                log.info("인증 체크 필터 종료 {}", requestURI);
+            }
         }
 
         /**
