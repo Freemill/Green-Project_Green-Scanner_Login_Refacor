@@ -1,5 +1,6 @@
 # 완성 화면
-[Keepful (1).pdf](https://github.com/Freemill/Green-Project_Green-Scanner_Login_Refacor/files/9948029/Keepful.1.pdf)
+![image](https://user-images.githubusercontent.com/76586084/200223704-7f49e603-97fb-4763-958f-ebd49498399b.png)
+
 
 흐름
 #### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```*** :arrow_forward: ***```서블릿```*** :arrow_forward: ***```스프링 인터셉터(적절하지 않은 요청이라 판단, 컨트롤러 호출 X)```*** // ***```비로그인 사용자```***
