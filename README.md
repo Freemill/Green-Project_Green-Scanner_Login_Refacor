@@ -1,3 +1,11 @@
+# 완성 화면
+[Keepful (1).pdf](https://github.com/Freemill/Green-Project_Green-Scanner_Login_Refacor/files/9948029/Keepful.1.pdf)
+
+흐름
+#### ***```HTTP 요청```*** :arrow_forward: ***```WAS```*** :arrow_forward: ***```필터```*** :arrow_forward: ***```서블릿```*** :arrow_forward: ***```스프링 인터셉터(적절하지 않은 요청이라 판단, 컨트롤러 호출 X)```*** // ***```비로그인 사용자```***
+
+
+
 # Login 기능 Refactoring & Deep dive
 
 이 Repositroy의 목적은 GbcCollector의 로그인 기능을 Refactoring함과 동시에 로그인 기능에 관한 기술들을 Deep dive하기 위함이다. 
